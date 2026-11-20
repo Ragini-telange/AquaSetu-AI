@@ -1,0 +1,302 @@
+"""
+Generate Jupyter Notebook for Sakshi's Aquaguard AI Classification Module
+"""
+import json
+
+notebook = {
+    "cells": [
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "# AQUAGUARD AI – GROUNDWATER RISK & WATER QUALITY CLASSIFICATION\n",
+                "### Member 2: Sakshi Pawar | Third Year AIML | Academic Project\n",
+                "**Project Title**: *AI-Based Groundwater Level Prediction and Geographical Risk Assessment Using Machine Learning*\n",
+                "\n",
+                "**Assigned Module**: Part 2 – Groundwater Resource Risk Classification and Water Quality Potability Classification\n",
+                "\n",
+                "---"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "## 1. Setup & Library Imports\n",
+                "We import data manipulation, visualization, preprocessing, and machine learning libraries."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import os\n",
+                "import numpy as np\n",
+                "import pandas as pd\n",
+                "import matplotlib.pyplot as plt\n",
+                "import seaborn as sns\n",
+                "import joblib\n",
+                "\n",
+                "from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate, GridSearchCV\n",
+                "from sklearn.preprocessing import StandardScaler\n",
+                "from sklearn.impute import SimpleImputer\n",
+                "from sklearn.pipeline import Pipeline\n",
+                "from sklearn.dummy import DummyClassifier\n",
+                "from sklearn.neighbors import KNeighborsClassifier\n",
+                "from sklearn.tree import DecisionTreeClassifier\n",
+                "from sklearn.naive_bayes import GaussianNB\n",
+                "from sklearn.ensemble import RandomForestClassifier\n",
+                "from sklearn.metrics import (\n",
+                "    accuracy_score, precision_score, recall_score, f1_score,\n",
+                "    balanced_accuracy_score, roc_auc_score, confusion_matrix, classification_report\n",
+                ")\n",
+                "from xgboost import XGBClassifier\n",
+                "\n",
+                "plt.style.use('seaborn-v0_8-whitegrid' if 'seaborn-v0_8-whitegrid' in plt.style.available else 'default')\n",
+                "print('Libraries successfully imported!')"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "## 2. Dataset Loading\n",
+                "Loading Maharashtra Groundwater Resource Assessment (2025) and Water Quality Chemical Parameters (1961-2025)."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# In Google Colab, upload the CSV files or adjust paths\n",
+                "res_path = 'mh_gw_2025.csv' if os.path.exists('mh_gw_2025.csv') else 'data/raw/mh_gw_2025.csv'\n",
+                "wq_path = 'gwq_chemical_parameter_manual_cgwb_an_1961_2025.csv' if os.path.exists('gwq_chemical_parameter_manual_cgwb_an_1961_2025.csv') else 'data/raw/gwq_chemical_parameter_manual_cgwb_an_1961_2025.csv'\n",
+                "\n",
+                "df_res_raw = pd.read_csv(res_path)\n",
+                "df_wq_raw = pd.read_csv(wq_path)\n",
+                "\n",
+                "# Clean Resource dataset (exclude summary/total rows)\n",
+                "df_res = df_res_raw[df_res_raw['Name of District'].notnull()].copy()\n",
+                "df_res = df_res[~df_res['Name of District'].astype(str).str.contains('Total', case=False, na=False)].reset_index(drop=True)\n",
+                "\n",
+                "print(f'Resource Assessment Districts: {len(df_res)}')\n",
+                "print(f'Water Quality Records: {len(df_wq_raw)}')"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "## 3. Data Preprocessing & Target Variable Preparation\n",
+                "- **Resource Risk (CGWB Rules)**: Safe (<=70%), Semi-Critical (70-90%).\n",
+                "- **Target Leakage Prevention**: We strictly DROP `Stage of GW extraction (%)` from feature predictors.\n",
+                "- **Water Quality (BIS IS 10500:2012)**: Binary Potability labeled via standard drinking water permissible limits."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# 1. Resource Target Formulation\n",
+                "stage_col = 'Stage of GW extraction (%)'\n",
+                "df_res['Target'] = (df_res[stage_col] > 70.0).astype(int)\n",
+                "drop_cols = ['Sr. No.', 'Name of District', stage_col, 'Target']\n",
+                "feature_cols_res = [c for c in df_res.columns if c not in drop_cols]\n",
+                "X_res = df_res[feature_cols_res].apply(pd.to_numeric, errors='coerce')\n",
+                "y_res = df_res['Target']\n",
+                "\n",
+                "# 2. Water Quality Target Formulation (BIS IS 10500:2012)\n",
+                "df_wq = df_wq_raw.copy()\n",
+                "ec_col = 'Electric Conductivity (μS/cm)'\n",
+                "tds_col = 'Total Dissolved Solids (mg/L)'\n",
+                "df_wq['TDS_Filled'] = pd.to_numeric(df_wq[tds_col], errors='coerce').fillna(pd.to_numeric(df_wq[ec_col], errors='coerce') * 0.64)\n",
+                "\n",
+                "is_non_potable = (\n",
+                "    (pd.to_numeric(df_wq['Potential of Hydrogen (pH)'], errors='coerce') < 6.5) |\n",
+                "    (pd.to_numeric(df_wq['Potential of Hydrogen (pH)'], errors='coerce') > 8.5) |\n",
+                "    (df_wq['TDS_Filled'] > 500.0) |\n",
+                "    (pd.to_numeric(df_wq['Total Hardness (mgCaCO3/L)'], errors='coerce') > 200.0) |\n",
+                "    (pd.to_numeric(df_wq['Calcium (mg/L)'], errors='coerce') > 75.0) |\n",
+                "    (pd.to_numeric(df_wq['Magnesium (mg/L)'], errors='coerce') > 30.0) |\n",
+                "    (pd.to_numeric(df_wq['Chloride (mg/L)'], errors='coerce') > 250.0) |\n",
+                "    (pd.to_numeric(df_wq['Sulphate (mg/L)'], errors='coerce') > 200.0) |\n",
+                "    (pd.to_numeric(df_wq['Iron(mg/L)'], errors='coerce') > 1.0)\n",
+                ")\n",
+                "df_wq['Target'] = np.where(is_non_potable, 0, 1) # 0: Non-Potable, 1: Potable\n",
+                "\n",
+                "feat_map = {\n",
+                "    'Potential of Hydrogen (pH)': 'pH',\n",
+                "    ec_col: 'Electrical_Conductivity',\n",
+                "    'TDS_Filled': 'TDS',\n",
+                "    'Total Hardness (mgCaCO3/L)': 'Total_Hardness',\n",
+                "    'Calcium (mg/L)': 'Calcium',\n",
+                "    'Magnesium (mg/L)': 'Magnesium',\n",
+                "    'Chloride (mg/L)': 'Chloride',\n",
+                "    'Sulphate (mg/L)': 'Sulphate',\n",
+                "    'Iron(mg/L)': 'Iron',\n",
+                "    'Bicarbonate (mg/L)': 'Bicarbonate',\n",
+                "    'Sodium (mg/L)': 'Sodium'\n",
+                "}\n",
+                "X_wq = df_wq[list(feat_map.keys())].rename(columns=feat_map).apply(pd.to_numeric, errors='coerce')\n",
+                "y_wq = df_wq['Target']\n",
+                "\n",
+                "print(f'Water Quality class distribution:\\n{y_wq.value_counts(normalize=True)}')"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "## 4. Train / Test Split & Model Comparison\n",
+                "We train and compare 6 classification models: Dummy Baseline, KNN, Decision Tree, Gaussian Naive Bayes, Random Forest, and XGBoost using Stratified 5-Fold Cross-Validation."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Stratified 80/20 train/test split\n",
+                "X_train_wq, X_test_wq, y_train_wq, y_test_wq = train_test_split(\n",
+                "    X_wq, y_wq, test_size=0.20, random_state=42, stratify=y_wq\n",
+                ")\n",
+                "\n",
+                "models = {\n",
+                "    'Dummy Baseline': DummyClassifier(strategy='stratified', random_state=42),\n",
+                "    'K-Nearest Neighbors': KNeighborsClassifier(n_neighbors=5),\n",
+                "    'Decision Tree': DecisionTreeClassifier(max_depth=5, random_state=42),\n",
+                "    'Gaussian Naive Bayes': GaussianNB(),\n",
+                "    'Random Forest': RandomForestClassifier(n_estimators=100, max_depth=6, random_state=42),\n",
+                "    'XGBoost': XGBClassifier(n_estimators=100, max_depth=4, learning_rate=0.1, random_state=42, eval_metric='logloss')\n",
+                "}\n",
+                "\n",
+                "results = []\n",
+                "cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\n",
+                "\n",
+                "for name, clf in models.items():\n",
+                "    pipe = Pipeline([\n",
+                "        ('imputer', SimpleImputer(strategy='median')),\n",
+                "        ('scaler', StandardScaler()),\n",
+                "        ('classifier', clf)\n",
+                "    ])\n",
+                "    cv_scores = cross_validate(pipe, X_train_wq, y_train_wq, cv=cv, scoring='accuracy')\n",
+                "    pipe.fit(X_train_wq, y_train_wq)\n",
+                "    y_pred = pipe.predict(X_test_wq)\n",
+                "    \n",
+                "    results.append({\n",
+                "        'Model': name,\n",
+                "        'CV Accuracy': cv_scores['test_accuracy'].mean(),\n",
+                "        'Test Accuracy': accuracy_score(y_test_wq, y_pred),\n",
+                "        'Precision': precision_score(y_test_wq, y_pred, zero_division=0),\n",
+                "        'Recall': recall_score(y_test_wq, y_pred, zero_division=0),\n",
+                "        'F1-Score': f1_score(y_test_wq, y_pred, zero_division=0),\n",
+                "        'Balanced Accuracy': balanced_accuracy_score(y_test_wq, y_pred)\n",
+                "    })\n",
+                "\n",
+                "df_results = pd.DataFrame(results)\n",
+                "display(df_results)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "## 5. Hyperparameter Tuning & Final Evaluation\n",
+                "Hyperparameter optimization for XGBoost and feature importance extraction."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "param_grid = {\n",
+                "    'classifier__n_estimators': [50, 100, 150],\n",
+                "    'classifier__max_depth': [3, 4, 6],\n",
+                "    'classifier__learning_rate': [0.03, 0.1, 0.2]\n",
+                "}\n",
+                "pipe_xgb = Pipeline([\n",
+                "    ('imputer', SimpleImputer(strategy='median')),\n",
+                "    ('scaler', StandardScaler()),\n",
+                "    ('classifier', XGBClassifier(random_state=42, eval_metric='logloss'))\n",
+                "])\n",
+                "grid_search = GridSearchCV(pipe_xgb, param_grid, cv=cv, scoring='accuracy', n_jobs=-1)\n",
+                "grid_search.fit(X_train_wq, y_train_wq)\n",
+                "\n",
+                "best_model = grid_search.best_estimator_\n",
+                "y_pred_best = best_model.predict(X_test_wq)\n",
+                "print('Best Hyperparameters:', grid_search.best_params_)\n",
+                "print('\\nTest Set Classification Report:\\n', classification_report(y_test_wq, y_pred_best, target_names=['Non-Potable', 'Potable']))\n",
+                "\n",
+                "# Confusion Matrix\n",
+                "cm = confusion_matrix(y_test_wq, y_pred_best)\n",
+                "plt.figure(figsize=(6, 5))\n",
+                "sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Non-Potable', 'Potable'], yticklabels=['Non-Potable', 'Potable'])\n",
+                "plt.title('Water Quality Confusion Matrix (XGBoost)')\n",
+                "plt.xlabel('Predicted')\n",
+                "plt.ylabel('Actual BIS Ground Truth')\n",
+                "plt.show()"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "## 6. Live Prediction Function\n",
+                "Inference function ready for viva demonstration and integration with teammate modules."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "def test_sample_prediction(sample_dict):\n",
+                "    df_in = pd.DataFrame([sample_dict])\n",
+                "    pred = best_model.predict(df_in)[0]\n",
+                "    prob = best_model.predict_proba(df_in)[0]\n",
+                "    label = 'Potable' if pred == 1 else 'Non-Potable'\n",
+                "    print(f'Prediction: {label}')\n",
+                "    print(f'Confidence: {prob[pred]*100:.2f}%')\n",
+                "    return label\n",
+                "\n",
+                "# Test with a sample\n",
+                "sample = {\n",
+                "    'pH': 7.6,\n",
+                "    'Electrical_Conductivity': 450.0,\n",
+                "    'TDS': 288.0,\n",
+                "    'Total_Hardness': 160.0,\n",
+                "    'Calcium': 45.0,\n",
+                "    'Magnesium': 18.0,\n",
+                "    'Chloride': 35.0,\n",
+                "    'Sulphate': 25.0,\n",
+                "    'Iron': 0.1,\n",
+                "    'Bicarbonate': 180.0,\n",
+                "    'Sodium': 32.0\n",
+                "}\n",
+                "test_sample_prediction(sample)"
+            ]
+        }
+    ],
+    "metadata": {
+        "language_info": {
+            "name": "python"
+        }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 2
+}
+
+with open('notebooks/Sakshi_Aquaguard_AI_Classification.ipynb', 'w', encoding='utf-8') as f:
+    json.dump(notebook, f, indent=2)
+
+print("Notebook generated successfully at notebooks/Sakshi_Aquaguard_AI_Classification.ipynb")

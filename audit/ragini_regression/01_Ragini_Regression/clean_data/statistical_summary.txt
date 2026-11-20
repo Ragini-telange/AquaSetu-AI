@@ -1,0 +1,52 @@
+===========================================================================
+AQUAGUARD AI – STATISTICAL SUMMARY & HYDROLOGICAL INFERENCES
+===========================================================================
+
+1. DATASET OVERVIEW & DATES:
+ - Cleaned Groundwater Records: 631,973
+ - Groundwater Date Range: 30-Mar-1970 to 16-Oct-2025
+ - Unique Monitoring Wells: 4,558
+ - Unique Administrative Districts: 33
+ - Cleaned Daily Rainfall Records: 121,904
+ - Rainfall Date Range: 01-Jan-2021 to 31-Jul-2025
+ - Unique Rainfall Stations: 658
+
+2. TARGET VARIABLE DESCRIPTIVE STATISTICS ('Water Level, m bgl'):
+count    631973.000000
+mean          6.583841
+std           4.438256
+min          -1.250000
+25%           3.400000
+50%           6.000000
+75%           8.800000
+max          50.550000
+Name: Water Level, m bgl, dtype: float64
+
+3. SEASONAL GROUNDWATER WATER TABLE DEPTH (m bgl):
+               count      mean  median       std   min    max
+Season                                                       
+Monsoon       103612  5.434256     4.5  4.472023 -1.25  50.55
+Post-Monsoon  130842  4.521405     3.5  3.822882 -0.80  50.55
+Pre-Monsoon   267635  8.172411     7.5  4.260153 -1.00  50.55
+Winter        129884  6.305186     5.5  4.141872 -0.90  50.55
+
+4. EXPERIMENT SAMPLES:
+ - Experiment A (Groundwater-Only Historical): 627,415 rows
+ - Experiment B (Groundwater + Antecedent Rainfall 2021-2025): 65,738 rows
+
+5. THREE KEY DATA-SUPPORTED INFERENCES:
+ INFERENCE 1 (Monsoon Recharge Dynamics):
+   Pre-monsoon median depth is 7.50 m bgl,
+   whereas post-monsoon median depth is 3.50 m bgl.
+   This shows an average seasonal water table recharge of 4.00 metres across Maharashtra.
+
+ INFERENCE 2 (Negative Slope between Rainfall and Water Table Depth):
+   In the matched overlap period (2021-2025), linear regression between prior 90-day rainfall
+   and water table depth exhibits a negative slope (-0.0019 m/mm).
+   Because m bgl measures depth from the surface, higher antecedent rainfall decreases the depth,
+   bringing the groundwater table closer to the ground surface.
+
+ INFERENCE 3 (High Well-Level Autocorrelation):
+   The Pearson correlation between current water level and previous observation (Lag_1) is 0.7028.
+   Groundwater systems possess high physical inertia; past groundwater level is the single strongest
+   autoregressive predictor of future level, making lag engineering critical.
