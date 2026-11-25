@@ -1,6 +1,6 @@
 <div align="center">
 
-# 💧 AquaGuard AI
+# 💧 AquaSetu-AI
 
 ### *Groundwater Intelligence & Potability Decision-Support System*
 
