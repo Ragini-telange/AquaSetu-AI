@@ -26,3 +26,8 @@ class NearestWellResponse(BaseModel):
     filter_district: Optional[str] = None
     nearest_wells: List[WellLocationItem]
     coverage_note: str = "Statewide spatial nearest-neighbor search across all 33 Maharashtra districts (4,381 well locations)."
+
+class LocationsListResponse(BaseModel):
+    total: int
+    district_filter: Optional[str] = None
+    locations: List[WellLocationItem]

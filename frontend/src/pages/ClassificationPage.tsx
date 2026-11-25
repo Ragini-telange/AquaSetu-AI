@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { Activity, ShieldAlert, ShieldCheck, AlertCircle, Info, Sparkles } from 'lucide-react';
+import {
+  Activity,
+  ShieldAlert,
+  ShieldCheck,
+  AlertCircle,
+  Beaker,
+  CheckCircle2,
+  Scale,
+  Info
+} from 'lucide-react';
 import { classifyWaterPotability } from '../services/api';
 import type { WaterPotabilityRequest, WaterPotabilityResponse } from '../services/api';
 
@@ -7,7 +16,7 @@ export const ClassificationPage: React.FC = () => {
   // 11 Exact Physicochemical Parameters
   const [ph, setPh] = useState<number>(7.2);
   const [ec, setEc] = useState<number>(600.0);
-  const [tds, setTds] = useState<string>('384.0'); // String to allow omitting
+  const [tds, setTds] = useState<string>('384.0');
   const [th, setTh] = useState<number>(180.0);
   const [ca, setCa] = useState<number>(50.0);
   const [mg, setMg] = useState<number>(25.0);
@@ -96,266 +105,255 @@ export const ClassificationPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E3EBE5] pb-5">
         <div>
-          <div className="flex items-center gap-2 text-teal-600 font-semibold text-xs tracking-wider uppercase">
-            <Activity className="w-4 h-4" />
-            <span>Sakshi &bull; Water Quality Classification</span>
+          <div className="flex items-center gap-2 text-[#073B32] font-semibold text-xs tracking-wider uppercase">
+            <span className="w-2 h-2 rounded-full bg-[#119B72]" />
+            <span>Quality Assessment &bull; Digital Water Testing Laboratory</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-            Drinking Water Potability Classification
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#182C25] mt-1">
+            Drinking Water Potability &amp; BIS Audit
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Evaluates physicochemical water safety against Bureau of Indian Standards (BIS IS 10500:2012).
+          <p className="text-[#718078] text-xs sm:text-sm mt-1">
+            Evaluates 11 laboratory physicochemical parameters against Bureau of Indian Standards (BIS IS 10500:2012) via XGBoost.
           </p>
         </div>
 
         {/* Preset Sample Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-slate-400">Presets:</span>
+          <span className="text-xs font-semibold text-[#718078]">Lab Presets:</span>
           <button
             type="button"
             onClick={() => applyPreset('potable')}
-            className="px-2.5 py-1 text-xs font-medium rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+            className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#EDF8F1] text-[#073B32] border border-[#D9F2E6] hover:bg-[#D9F2E6] transition-colors"
           >
-            Safe Potable
+            Safe Potable Sample
           </button>
           <button
             type="button"
             onClick={() => applyPreset('non_potable')}
-            className="px-2.5 py-1 text-xs font-medium rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors"
+            className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#FDF2F2] text-[#E45B55] border border-[#FAD2D2] hover:bg-[#FAD2D2] transition-colors"
           >
-            Contaminated
+            Contaminated Sample
           </button>
           <button
             type="button"
             onClick={() => applyPreset('missing_tds')}
-            className="px-2.5 py-1 text-xs font-medium rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100 transition-colors"
+            className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white text-[#182C25] border border-[#E3EBE5] hover:border-[#119B72] transition-colors"
           >
-            Omit TDS (Fallback)
+            Omit TDS (EC Ratio Fallback)
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Input Form Column */}
-        <div className="lg:col-span-7">
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center justify-between">
-              <span>Physicochemical Parameters (11 Inputs)</span>
-              <span className="text-xs font-normal text-slate-400">BIS IS 10500:2012</span>
-            </h2>
+        {/* Input Form Column (7 Cols) */}
+        <div className="lg:col-span-7 space-y-5">
+          <div className="bg-white rounded-2xl border border-[#E3EBE5] p-6 shadow-xs">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#E3EBE5]">
+              <h2 className="text-xs font-bold text-[#182C25] uppercase tracking-wider flex items-center gap-2">
+                <Beaker className="w-4 h-4 text-[#119B72]" />
+                <span>Laboratory Physicochemical Inputs (11 Parameters)</span>
+              </h2>
+              <span className="text-[11px] font-semibold text-[#073B32] bg-[#EDF8F1] px-2 py-0.5 rounded border border-[#D9F2E6]">
+                IS 10500 Compliant
+              </span>
+            </div>
 
-            <form onSubmit={handleClassify} className="space-y-4">
-              {/* Row 1: pH and EC */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">1. pH Level</label>
-                    <span className="text-[11px] text-slate-400">Permissible: 6.5 – 8.5</span>
+            <form onSubmit={handleClassify} className="space-y-5">
+              {/* Group 1: General & Salinity */}
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#718078] mb-2.5">
+                  1. Acidity &amp; Salinity Indicators
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">pH Level (0-14)</label>
+                    <span className="text-[10px] text-[#718078] block">Limit: 6.5 &ndash; 8.5</span>
+                    <input
+                      type="number"
+                      step="0.05"
+                      min="0"
+                      max="14"
+                      value={ph}
+                      onChange={(e) => setPh(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="0.05"
-                    min="0"
-                    max="14"
-                    value={ph}
-                    onChange={(e) => setPh(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
 
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">2. Electrical Conductivity</label>
-                    <span className="text-[11px] text-slate-400">µS/cm at 25°C</span>
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">Conductivity (EC)</label>
+                    <span className="text-[10px] text-[#718078] block">&micro;S/cm at 25&deg;C</span>
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      value={ec}
+                      onChange={(e) => setEc(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="1"
-                    min="0"
-                    value={ec}
-                    onChange={(e) => setEc(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
-              </div>
 
-              {/* Row 2: TDS and Hardness */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">3. Total Dissolved Solids (TDS)</label>
-                    <span className="text-[11px] text-slate-400">Limit: ≤ 500 mg/L</span>
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">TDS (mg/L)</label>
+                    <span className="text-[10px] text-[#718078] block">Limit: &le; 500 mg/L</span>
+                    <input
+                      type="text"
+                      value={tds}
+                      onChange={(e) => setTds(e.target.value)}
+                      placeholder="Blank for EC &times; 0.64"
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none placeholder:text-[#718078]/60"
+                    />
                   </div>
-                  <input
-                    type="text"
-                    value={tds}
-                    onChange={(e) => setTds(e.target.value)}
-                    placeholder="Leave blank for automatic 0.64 * EC fallback"
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none placeholder:text-slate-300"
-                  />
-                  <p className="text-[10px] text-teal-600 mt-1">
-                    * If blank, backend applies hydrological ratio: TDS = 0.64 × EC
-                  </p>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">4. Total Hardness (as CaCO₃)</label>
-                    <span className="text-[11px] text-slate-400">Limit: ≤ 200 mg/L</span>
-                  </div>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={th}
-                    onChange={(e) => setTh(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
                 </div>
               </div>
 
-              {/* Row 3: Calcium & Magnesium */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">5. Calcium (Ca²⁺)</label>
-                    <span className="text-[11px] text-slate-400">Limit: ≤ 75 mg/L</span>
+              {/* Group 2: Hardness & Cations */}
+              <div className="pt-3 border-t border-[#E3EBE5]">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#718078] mb-2.5">
+                  2. Hardness &amp; Major Cations (mg/L)
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">Total Hardness</label>
+                    <span className="text-[10px] text-[#718078] block">&le; 200 as CaCO3</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={th}
+                      onChange={(e) => setTh(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={ca}
-                    onChange={(e) => setCa(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
 
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">6. Magnesium (Mg²⁺)</label>
-                    <span className="text-[11px] text-slate-400">Limit: ≤ 30 mg/L</span>
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">Calcium (Ca)</label>
+                    <span className="text-[10px] text-[#718078] block">&le; 75 mg/L</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={ca}
+                      onChange={(e) => setCa(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={mg}
-                    onChange={(e) => setMg(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
-              </div>
 
-              {/* Row 4: Chloride & Sulphate */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">7. Chloride (Cl⁻)</label>
-                    <span className="text-[11px] text-slate-400">Limit: ≤ 250 mg/L</span>
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">Magnesium (Mg)</label>
+                    <span className="text-[10px] text-[#718078] block">&le; 30 mg/L</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={mg}
+                      onChange={(e) => setMg(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={cl}
-                    onChange={(e) => setCl(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
 
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">8. Sulphate (SO₄²⁻)</label>
-                    <span className="text-[11px] text-slate-400">Limit: ≤ 200 mg/L</span>
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">Sodium (Na)</label>
+                    <span className="text-[10px] text-[#718078] block">Alkali balance</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={na}
+                      onChange={(e) => setNa(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={so4}
-                    onChange={(e) => setSo4(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
                 </div>
               </div>
 
-              {/* Row 5: Iron, Bicarbonate, Sodium */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">9. Iron (Fe)</label>
-                    <span className="text-[10px] text-slate-400">≤ 1.0 mg/L</span>
+              {/* Group 3: Anions & Trace Metals */}
+              <div className="pt-3 border-t border-[#E3EBE5]">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#718078] mb-2.5">
+                  3. Anions &amp; Trace Dissolved Metals (mg/L)
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">Chloride (Cl)</label>
+                    <span className="text-[10px] text-[#718078] block">&le; 250 mg/L</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={cl}
+                      onChange={(e) => setCl(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={fe}
-                    onChange={(e) => setFe(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
 
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">10. Bicarbonate</label>
-                    <span className="text-[10px] text-slate-400">mg/L</span>
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">Sulphate (SO4)</label>
+                    <span className="text-[10px] text-[#718078] block">&le; 200 mg/L</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={so4}
+                      onChange={(e) => setSo4(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="1"
-                    min="0"
-                    value={bicarb}
-                    onChange={(e) => setBicarb(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
 
-                <div>
-                  <div className="flex justify-between items-baseline mb-1">
-                    <label className="text-xs font-bold text-slate-700">11. Sodium (Na⁺)</label>
-                    <span className="text-[10px] text-slate-400">mg/L</span>
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">Dissolved Iron (Fe)</label>
+                    <span className="text-[10px] text-[#718078] block">&le; 1.0 mg/L</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={fe}
+                      onChange={(e) => setFe(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={na}
-                    onChange={(e) => setNa(parseFloat(e.target.value) || 0)}
-                    required
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
+
+                  <div>
+                    <label className="text-[11px] font-bold text-[#182C25]">Bicarbonate (HCO3)</label>
+                    <span className="text-[10px] text-[#718078] block">Buffer alkalinity</span>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={bicarb}
+                      onChange={(e) => setBicarb(parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full mt-1 px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-semibold text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-4 py-2.5 px-4 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm transition-all shadow-md shadow-teal-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-xl bg-[#119B72] hover:bg-[#0E8360] text-white font-bold text-xs sm:text-sm transition-all shadow-md shadow-[#119B72]/20 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Evaluating with XGBoost...</span>
+                    <span>Evaluating Physicochemical Profile...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
-                    <span>Classify Water Potability</span>
+                    <Activity className="w-4 h-4" />
+                    <span>Classify Potability &amp; Check BIS Limits</span>
                   </>
                 )}
               </button>
@@ -363,11 +361,11 @@ export const ClassificationPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Results Column */}
-        <div className="lg:col-span-5 space-y-6">
+        {/* Output & Audit Result Column (5 Cols) */}
+        <div className="lg:col-span-5 space-y-5">
           {error && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-rose-500 mt-0.5 shrink-0" />
+            <div className="p-4 rounded-2xl bg-[#FDF2F2] border border-[#FAD2D2] text-[#E45B55] flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-[#E45B55] mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-bold">Evaluation Error</p>
                 <p className="text-xs mt-0.5">{error}</p>
@@ -376,89 +374,131 @@ export const ClassificationPage: React.FC = () => {
           )}
 
           {result ? (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
-              {/* Outcome Badge Card */}
-              <div className={`p-6 text-white ${
-                result.potability_code === 1
-                  ? 'bg-gradient-to-r from-emerald-700 to-teal-800'
-                  : 'bg-gradient-to-r from-rose-800 to-red-950'
-              }`}>
-                <div className="flex items-center gap-3">
+            <div className="bg-white rounded-2xl border border-[#E3EBE5] shadow-xs overflow-hidden space-y-5 p-6">
+              {/* Primary Potability Outcome Banner */}
+              <div
+                className={`p-5 rounded-2xl border flex items-center justify-between ${result.potability_code === 1
+                    ? 'bg-[#EDF8F1] border-[#D9F2E6] text-[#073B32]'
+                    : 'bg-[#FDF2F2] border-[#FAD2D2] text-[#E45B55]'
+                  }`}
+              >
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider">
+                    Model Potability Classification
+                  </span>
+                  <h3 className="text-2xl font-extrabold mt-0.5">
+                    {result.potability_label}
+                  </h3>
+                  <p className="text-xs mt-1">
+                    Statistical confidence: {(result.confidence_score * 100).toFixed(1)}%
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white shadow-xs">
                   {result.potability_code === 1 ? (
-                    <ShieldCheck className="w-10 h-10 text-emerald-300" />
+                    <ShieldCheck className="w-8 h-8 text-[#119B72]" />
                   ) : (
-                    <ShieldAlert className="w-10 h-10 text-rose-300" />
+                    <ShieldAlert className="w-8 h-8 text-[#E45B55]" />
                   )}
-                  <div>
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-200">
-                      Classification Result
-                    </span>
-                    <h3 className="text-2xl font-black tracking-tight">
-                      {result.potability_label === 'Potable' ? 'POTABLE WATER (SAFE)' : 'NON-POTABLE (UNSAFE)'}
-                    </h3>
+                </div>
+              </div>
+
+              {/* Machine Learning Probability Breakdown */}
+              <div className="space-y-2 bg-[#F8FAF7] p-4 rounded-xl border border-[#E3EBE5]">
+                <p className="text-xs font-bold text-[#182C25] flex items-center justify-between">
+                  <span>ML Class Probability Profile</span>
+                  <span className="text-[10px] text-[#718078] font-normal">XGBoost (98.8% CV)</span>
+                </p>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-medium">
+                    <span className="text-[#073B32]">Potable Probability</span>
+                    <span className="font-bold text-[#182C25]">{(result.probability_potable * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-[#E3EBE5] overflow-hidden">
+                    <div
+                      className="h-full bg-[#119B72] rounded-full"
+                      style={{ width: `${result.probability_potable * 100}%` }}
+                    />
                   </div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-black/20 p-2.5 rounded-lg border border-white/10">
-                    <p className="text-slate-300">Potable Probability</p>
-                    <p className="text-lg font-bold text-emerald-300 mt-0.5">
-                      {(result.probability_potable * 100).toFixed(1)}%
-                    </p>
+                <div className="space-y-1 pt-1">
+                  <div className="flex justify-between text-xs font-medium">
+                    <span className="text-[#E45B55]">Non-Potable Probability</span>
+                    <span className="font-bold text-[#182C25]">{(result.probability_non_potable * 100).toFixed(1)}%</span>
                   </div>
-                  <div className="bg-black/20 p-2.5 rounded-lg border border-white/10">
-                    <p className="text-slate-300">Non-Potable Probability</p>
-                    <p className="text-lg font-bold text-rose-300 mt-0.5">
-                      {(result.probability_non_potable * 100).toFixed(1)}%
-                    </p>
+                  <div className="w-full h-2 rounded-full bg-[#E3EBE5] overflow-hidden">
+                    <div
+                      className="h-full bg-[#E45B55] rounded-full"
+                      style={{ width: `${result.probability_non_potable * 100}%` }}
+                    />
                   </div>
                 </div>
 
                 {result.input_tds_calculated && (
-                  <p className="mt-3 text-[11px] text-teal-200 bg-white/10 px-2.5 py-1 rounded">
-                    &bull; Notice: TDS was omitted and automatically calculated via 0.64 × EC domain ratio.
+                  <p className="text-[10px] text-[#119B72] pt-2 border-t border-[#E3EBE5]">
+                    &bull; Note: TDS was automatically derived from Electrical Conductivity via hydrological 0.64 factor.
                   </p>
                 )}
               </div>
 
-              {/* Exceeded Parameters Table */}
-              <div className="p-5">
-                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2.5">
-                  Physicochemical Limits Audit (BIS IS 10500:2012)
-                </h4>
+              {/* Separate BIS IS 10500:2012 Compliance Audit Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-[#182C25] uppercase tracking-wider flex items-center gap-1.5">
+                    <Scale className="w-4 h-4 text-[#119B72]" />
+                    <span>Statutory Standards Audit (BIS IS 10500)</span>
+                  </h4>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${result.exceeded_parameters.length === 0
+                        ? 'bg-[#EDF8F1] text-[#119B72] border border-[#D9F2E6]'
+                        : 'bg-[#FDF2F2] text-[#E45B55] border border-[#FAD2D2]'
+                      }`}
+                  >
+                    {result.exceeded_parameters.length === 0
+                      ? 'Fully Compliant'
+                      : `${result.exceeded_parameters.length} Violations`}
+                  </span>
+                </div>
 
-                {result.exceeded_parameters.length > 0 ? (
-                  <div className="space-y-2">
-                    {result.exceeded_parameters.map((ex, idx) => (
-                      <div key={idx} className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs">
-                        <div className="flex justify-between items-baseline font-bold text-rose-900">
-                          <span>{ex.parameter} Exceedance</span>
-                          <span className="text-rose-700">Observed: {ex.observed_value} ({ex.acceptable_limit})</span>
-                        </div>
-                        <p className="text-rose-800 text-[11px] mt-0.5">{ex.description}</p>
-                      </div>
-                    ))}
+                {result.exceeded_parameters.length === 0 ? (
+                  <div className="p-3 rounded-xl bg-[#EDF8F1] border border-[#D9F2E6] text-xs text-[#073B32] flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#119B72] shrink-0" />
+                    <span>All evaluated parameters reside within official BIS permissible drinking water limits.</span>
                   </div>
                 ) : (
-                  <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>All tested physicochemical parameters conform strictly to BIS IS 10500:2012 acceptable limits.</span>
+                  <div className="space-y-2">
+                    {result.exceeded_parameters.map((e, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 rounded-xl bg-[#FDF2F2] border border-[#FAD2D2] text-xs text-[#E45B55] space-y-1"
+                      >
+                        <div className="flex items-center justify-between font-bold">
+                          <span>{e.parameter}</span>
+                          <span>Observed: {e.observed_value} ({e.acceptable_limit})</span>
+                        </div>
+                        <p className="text-[11px] text-[#E45B55]/90">{e.description}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* Statutory Advisory */}
-              <div className="p-4 bg-slate-50 border-t border-slate-200 text-slate-500 text-[11px] leading-relaxed flex items-start gap-2.5">
-                <Info className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-                <p>{result.regulatory_advisory}</p>
+              {/* Explicit Mandatory Advisory Disclaimer */}
+              <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E3EBE5] text-[11px] text-[#718078] flex items-start gap-2 leading-relaxed">
+                <Info className="w-4 h-4 text-[#718078] shrink-0 mt-0.5" />
+                <p>
+                  <strong className="text-[#182C25]">Regulatory Notice:</strong> Machine-learning potability estimates represent empirical statistical screening and do NOT certify drinking water safety. Formal potable release requires certified chemical, toxicological and microbiological laboratory assays.
+                </p>
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-400">
-              <Activity className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-              <p className="text-sm font-semibold text-slate-600">No Classification Run</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Enter physicochemical parameters or select a preset sample to classify potability against BIS standards.
+            <div className="bg-white rounded-2xl border border-[#E3EBE5] p-12 text-center text-[#718078] space-y-3">
+              <Beaker className="w-12 h-12 text-[#CDDAD1] mx-auto" />
+              <h3 className="text-base font-bold text-[#182C25]">Ready for Chemical Evaluation</h3>
+              <p className="text-xs text-[#718078] max-w-sm mx-auto leading-relaxed">
+                Enter your water sample parameters or choose a laboratory preset on the top right to assess potable suitability against Bureau of Indian Standards specifications.
               </p>
             </div>
           )}

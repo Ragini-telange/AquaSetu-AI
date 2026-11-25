@@ -24,6 +24,7 @@ class SpatialService:
         self.snap_dict: Dict[int, Dict[str, Any]] = {}
         self.coords_array: Optional[np.ndarray] = None
         self.kdtree: Optional[KDTree] = None
+        self.locations_metadata: List[Dict[str, Any]] = []
         self.is_initialized = False
 
     def initialize(self):
@@ -60,8 +61,46 @@ class SpatialService:
         self.coords_array = self.df_locations[['Latitude', 'Longitude']].values
         self.kdtree = KDTree(self.coords_array)
 
+        # Precompute locations metadata
+        self.locations_metadata = []
+        for _, row in self.df_locations.iterrows():
+            loc_id = int(row['location_id'])
+            raw_wells = str(row.get('well_ids', ''))
+            well_ids = [w.strip() for w in raw_wells.replace('[', '').replace(']', '').replace("'", "").split(',') if w.strip()]
+            snap_info = self.snap_dict.get(loc_id, {})
+            self.locations_metadata.append({
+                'location_id': loc_id,
+                'district': str(row.get('districts', '')),
+                'block': str(row.get('blocks', '')),
+                'village': str(row.get('villages', '')),
+                'latitude': round(float(row['Latitude']), 6),
+                'longitude': round(float(row['Longitude']), 6),
+                'distance_km': 0.0,
+                'well_ids': well_ids,
+                'num_wells': int(row.get('num_well_ids', len(well_ids))),
+                'pune_road_node_id': snap_info.get('node_id'),
+                'snap_distance_m': snap_info.get('snap_distance_m')
+            })
+
         self.is_initialized = True
         print(f"[SpatialService] Initialized with {len(self.df_locations)} locations across {self.df_locations['districts'].nunique()} districts.")
+
+    def get_locations(self, district: Optional[str] = None, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+        if not self.is_initialized:
+            self.initialize()
+        if district:
+            d_clean = district.strip().lower()
+            res = [loc for loc in self.locations_metadata if loc['district'].lower() == d_clean]
+        else:
+            res = self.locations_metadata
+        if limit and limit > 0:
+            return res[:limit]
+        return res
+
+    def get_districts(self) -> List[str]:
+        if not self.is_initialized:
+            self.initialize()
+        return sorted(list(set(loc['district'] for loc in self.locations_metadata if loc['district'])))
 
     def find_nearest_wells(self, req: NearestWellRequest) -> NearestWellResponse:
         if not self.is_initialized:

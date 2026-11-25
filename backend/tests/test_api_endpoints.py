@@ -90,6 +90,26 @@ def test_regression_invalid_well(client):
     assert res.status_code == 404
     assert "not found" in res.json()["detail"].lower()
 
+def test_regression_wells_and_districts(client):
+    res_dist = client.get("/api/v1/regression/districts")
+    assert res_dist.status_code == 200
+    districts = res_dist.json()
+    assert len(districts) > 20
+    assert "Pune" in districts
+
+    res_wells = client.get("/api/v1/regression/wells?district=Pune&limit=10")
+    assert res_wells.status_code == 200
+    data = res_wells.json()
+    assert data["total"] > 0
+    assert len(data["wells"]) <= 10
+    assert data["wells"][0]["district"].lower() == "pune"
+
+    res_detail = client.get("/api/v1/regression/wells/W153803073591301")
+    assert res_detail.status_code == 200
+    detail = res_detail.json()
+    assert detail["well_id"] == "W153803073591301"
+    assert len(detail["historical_records"]) >= 15
+
 # -------------------------------------------------------------
 # 3. WATER QUALITY CLASSIFICATION TESTS (SAKSHI)
 # -------------------------------------------------------------
@@ -196,6 +216,19 @@ def test_spatial_district_filtered_search(client):
     assert data["total_found"] > 0
     for w in data["nearest_wells"]:
         assert w["district"].lower() == "wardha"
+
+def test_spatial_locations_and_districts(client):
+    res_dist = client.get("/api/v1/spatial/districts")
+    assert res_dist.status_code == 200
+    districts = res_dist.json()
+    assert len(districts) == 33
+
+    res_locs = client.get("/api/v1/spatial/locations?district=Wardha&limit=10")
+    assert res_locs.status_code == 200
+    data = res_locs.json()
+    assert data["total"] > 0
+    assert len(data["locations"]) <= 10
+    assert data["locations"][0]["district"].lower() == "wardha"
 
 # -------------------------------------------------------------
 # 5. PUNE ROAD ROUTING TESTS (VEDANGI)

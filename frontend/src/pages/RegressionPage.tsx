@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { Droplets, Calendar, Gauge, AlertCircle, CheckCircle2, Sliders, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Droplets,
+  Calendar,
+  Gauge,
+  AlertCircle,
+  CheckCircle2,
+  Sliders,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
 import { predictWaterLevel } from '../services/api';
 import type { WaterLevelPredictionResponse, WaterLevelPredictionRequest } from '../services/api';
 
 export const RegressionPage: React.FC = () => {
   const [mode, setMode] = useState<'historical_lookup' | 'custom_scenario'>('historical_lookup');
 
-  // Mode A state
+  // Mode A state (Verified Well Presets)
   const [wellId, setWellId] = useState<string>('W153803073591301');
   const [predictionDate, setPredictionDate] = useState<string>('2024-05-29');
 
@@ -28,12 +37,12 @@ export const RegressionPage: React.FC = () => {
   const [result, setResult] = useState<WaterLevelPredictionResponse | null>(null);
   const [showFeatures, setShowFeatures] = useState<boolean>(false);
 
-  // Sample well presets
+  // Sample well presets verified in Experiment B repository
   const sampleWells = [
-    { id: 'W153803073591301', name: 'Matne (Sindhudurg)', date: '2024-05-29' },
-    { id: 'W182646073521001', name: 'Katraj, Pune (Haveli)', date: '2024-05-28' },
-    { id: 'W204427078364501', name: 'Wardha Sub-district', date: '2024-06-01' },
-    { id: 'W174810075540001', name: 'Mardi, Solapur (Dug Well)', date: '2024-06-06' }
+    { id: 'W153803073591301', name: 'Matne (Sindhudurg)', date: '2024-05-29', district: 'Sindhudurg' },
+    { id: 'W182646073521001', name: 'Katraj, Pune (Haveli)', date: '2024-05-28', district: 'Pune' },
+    { id: 'W204427078364501', name: 'Wardha Sub-district', date: '2024-06-01', district: 'Wardha' },
+    { id: 'W174810075540001', name: 'Mardi, Solapur (Dug Well)', date: '2024-06-06', district: 'Solapur' }
   ];
 
   const handlePredict = async (e: React.FormEvent) => {
@@ -76,29 +85,29 @@ export const RegressionPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Page Scientific Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#E3EBE5] pb-5">
         <div>
-          <div className="flex items-center gap-2 text-cyan-600 font-semibold text-xs tracking-wider uppercase">
-            <Droplets className="w-4 h-4" />
-            <span>Ragini &bull; Regression Module</span>
+          <div className="flex items-center gap-2 text-[#073B32] font-semibold text-xs tracking-wider uppercase">
+            <span className="w-2 h-2 rounded-full bg-[#119B72]" />
+            <span>Predictive Analytics &bull; Scientific Groundwater Regression</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-            Groundwater Level Prediction
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#182C25] mt-1">
+            Groundwater Depth Prediction Analytics
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Predict depth to water table in meters below ground level (m bgl) via verified KNN Regressor (k=7).
+          <p className="text-[#718078] text-xs sm:text-sm mt-1">
+            Predicts future phreatic water table depth in metres below ground level (m bgl) via verified distance-weighted KNN Regressor (k=7).
           </p>
         </div>
 
         {/* Mode Selector Tabs */}
-        <div className="flex bg-slate-100 p-1 rounded-xl self-start sm:self-auto border border-slate-200">
+        <div className="flex bg-[#EDF8F1] p-1 rounded-xl self-start sm:self-auto border border-[#D9F2E6]">
           <button
             onClick={() => setMode('historical_lookup')}
             className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === 'historical_lookup'
-              ? 'bg-white text-cyan-700 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-[#073B32] shadow-xs'
+                : 'text-[#718078] hover:text-[#182C25]'
               }`}
           >
             Historical Well Lookup
@@ -106,11 +115,11 @@ export const RegressionPage: React.FC = () => {
           <button
             onClick={() => setMode('custom_scenario')}
             className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === 'custom_scenario'
-              ? 'bg-white text-cyan-700 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-[#073B32] shadow-xs'
+                : 'text-[#718078] hover:text-[#182C25]'
               }`}
           >
-            Custom Scenario
+            Custom Hydrological Scenario
           </button>
         </div>
       </div>
@@ -118,13 +127,13 @@ export const RegressionPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Form Controls Column */}
         <div className="lg:col-span-5 space-y-5">
-          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div className="bg-white rounded-2xl border border-[#E3EBE5] p-5 shadow-xs">
             <form onSubmit={handlePredict} className="space-y-4">
               {mode === 'historical_lookup' ? (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      CGWB Well Identifier
+                    <label className="block text-xs font-bold text-[#182C25] mb-1">
+                      CGWB Monitoring Well Identifier
                     </label>
                     <input
                       type="text"
@@ -132,17 +141,17 @@ export const RegressionPage: React.FC = () => {
                       onChange={(e) => setWellId(e.target.value)}
                       placeholder="e.g. W153803073591301"
                       required
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+                      className="w-full px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs font-mono text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none transition-colors"
                     />
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Over 3,737 precomputed CGWB monitoring wells across Maharashtra.
+                    <p className="text-[11px] text-[#718078] mt-1">
+                      Lookup across 3,737 precomputed CGWB monitoring stations in Maharashtra.
                     </p>
                   </div>
 
                   {/* Sample Presets */}
                   <div>
-                    <p className="text-xs font-semibold text-slate-500 mb-1.5">Preset Sample Wells:</p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <p className="text-xs font-semibold text-[#718078] mb-1.5">Verified Sample Stations:</p>
+                    <div className="grid grid-cols-2 gap-2">
                       {sampleWells.map((s) => (
                         <button
                           key={s.id}
@@ -151,19 +160,20 @@ export const RegressionPage: React.FC = () => {
                             setWellId(s.id);
                             setPredictionDate(s.date);
                           }}
-                          className={`text-xs px-2.5 py-1 rounded-md border text-left transition-colors ${wellId === s.id
-                            ? 'bg-cyan-50 border-cyan-400 text-cyan-800 font-medium'
-                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                          className={`text-left p-2.5 rounded-xl border transition-all text-xs ${wellId === s.id
+                              ? 'bg-[#EDF8F1] border-[#119B72] text-[#073B32] font-semibold'
+                              : 'bg-white border-[#E3EBE5] text-[#182C25] hover:border-[#CDDAD1]'
                             }`}
                         >
-                          {s.name}
+                          <p className="font-semibold truncate">{s.name}</p>
+                          <p className="text-[10px] font-mono text-[#718078] truncate">{s.id}</p>
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label className="block text-xs font-bold text-[#182C25] mb-1">
                       Target Monitoring Date (YYYY-MM-DD)
                     </label>
                     <div className="relative">
@@ -172,12 +182,12 @@ export const RegressionPage: React.FC = () => {
                         value={predictionDate}
                         onChange={(e) => setPredictionDate(e.target.value)}
                         placeholder="e.g. 2024-05-29 (or leave empty for latest)"
-                        className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none transition-colors"
                       />
-                      <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+                      <Calendar className="w-4 h-4 text-[#718078] absolute left-3 top-2.5 pointer-events-none" />
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Historical coverage spans 2021-02-15 to 2025-06-18.
+                    <p className="text-[11px] text-[#718078] mt-1">
+                      Repository observations span 2021-02-15 through 2025-06-18.
                     </p>
                   </div>
                 </>
@@ -185,11 +195,11 @@ export const RegressionPage: React.FC = () => {
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">District Name</label>
+                      <label className="block text-xs font-bold text-[#182C25] mb-1">District Name</label>
                       <select
                         value={district}
                         onChange={(e) => setDistrict(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                        className="w-full px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
                       >
                         {['Pune', 'Wardha', 'Nagpur', 'Solapur', 'Nashik', 'Amravati', 'Aurangabad', 'Kolhapur', 'Thane'].map((d) => (
                           <option key={d} value={d}>{d}</option>
@@ -198,11 +208,11 @@ export const RegressionPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Season</label>
+                      <label className="block text-xs font-bold text-[#182C25] mb-1">Season</label>
                       <select
                         value={season}
                         onChange={(e) => setSeason(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-cyan-500 outline-none"
+                        className="w-full px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs text-[#182C25] focus:bg-white focus:border-[#119B72] outline-none"
                       >
                         {['Pre-Monsoon', 'Monsoon', 'Post-Monsoon', 'Winter'].map((s) => (
                           <option key={s} value={s}>{s}</option>
@@ -212,93 +222,93 @@ export const RegressionPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Well Depth (m)</label>
+                    <label className="block text-xs font-bold text-[#182C25] mb-1">Well Borehole Depth (m)</label>
                     <input
                       type="number"
                       step="0.1"
                       value={wellDepth}
                       onChange={(e) => setWellDepth(parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-sm"
+                      className="w-full px-3 py-2 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] text-xs text-[#182C25]"
                     />
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100">
-                    <p className="text-xs font-bold text-slate-700 mb-2">Past Lags (Water Level m bgl)</p>
+                  <div className="pt-2 border-t border-[#E3EBE5]">
+                    <p className="text-xs font-bold text-[#182C25] mb-2">Historical Water Level Lags (m bgl)</p>
                     <div className="grid grid-cols-3 gap-2">
                       <div>
-                        <label className="text-[10px] text-slate-500">Lag 1 (Prev)</label>
+                        <label className="text-[10px] text-[#718078]">Lag 1 (Prev)</label>
                         <input
                           type="number"
                           step="0.1"
                           value={lag1}
                           onChange={(e) => setLag1(parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1 text-xs border rounded"
+                          className="w-full px-2 py-1.5 text-xs border border-[#E3EBE5] bg-[#F8FAF7] rounded-lg"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-500">Lag 2</label>
+                        <label className="text-[10px] text-[#718078]">Lag 2</label>
                         <input
                           type="number"
                           step="0.1"
                           value={lag2}
                           onChange={(e) => setLag2(parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1 text-xs border rounded"
+                          className="w-full px-2 py-1.5 text-xs border border-[#E3EBE5] bg-[#F8FAF7] rounded-lg"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-500">Lag 4 (~1 yr)</label>
+                        <label className="text-[10px] text-[#718078]">Lag 4 (~1 yr)</label>
                         <input
                           type="number"
                           step="0.1"
                           value={lag4}
                           onChange={(e) => setLag4(parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1 text-xs border rounded"
+                          className="w-full px-2 py-1.5 text-xs border border-[#E3EBE5] bg-[#F8FAF7] rounded-lg"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100">
-                    <p className="text-xs font-bold text-slate-700 mb-2">Antecedent Rainfall (mm)</p>
+                  <div className="pt-2 border-t border-[#E3EBE5]">
+                    <p className="text-xs font-bold text-[#182C25] mb-2">Antecedent Rainfall Accumulators (mm)</p>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] text-slate-500">Prior 30d (mm)</label>
+                        <label className="text-[10px] text-[#718078]">Prior 30d (mm)</label>
                         <input
                           type="number"
                           step="1"
                           value={rain30d}
                           onChange={(e) => setRain30d(parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1 text-xs border rounded"
+                          className="w-full px-2 py-1.5 text-xs border border-[#E3EBE5] bg-[#F8FAF7] rounded-lg"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-500">Prior 60d (mm)</label>
+                        <label className="text-[10px] text-[#718078]">Prior 60d (mm)</label>
                         <input
                           type="number"
                           step="1"
                           value={rain60d}
                           onChange={(e) => setRain60d(parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1 text-xs border rounded"
+                          className="w-full px-2 py-1.5 text-xs border border-[#E3EBE5] bg-[#F8FAF7] rounded-lg"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-500">Prior 90d (mm)</label>
+                        <label className="text-[10px] text-[#718078]">Prior 90d (mm)</label>
                         <input
                           type="number"
                           step="1"
                           value={rain90d}
                           onChange={(e) => setRain90d(parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1 text-xs border rounded"
+                          className="w-full px-2 py-1.5 text-xs border border-[#E3EBE5] bg-[#F8FAF7] rounded-lg"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-500">Prior 180d (mm)</label>
+                        <label className="text-[10px] text-[#718078]">Prior 180d (mm)</label>
                         <input
                           type="number"
                           step="1"
                           value={rain180d}
                           onChange={(e) => setRain180d(parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1 text-xs border rounded"
+                          className="w-full px-2 py-1.5 text-xs border border-[#E3EBE5] bg-[#F8FAF7] rounded-lg"
                         />
                       </div>
                     </div>
@@ -309,17 +319,17 @@ export const RegressionPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 py-2.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-sm transition-all shadow-md shadow-cyan-600/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full mt-2 py-2.5 px-4 rounded-xl bg-[#119B72] hover:bg-[#0E8360] text-white font-semibold text-xs sm:text-sm transition-all shadow-md shadow-[#119B72]/20 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Predicting with KNN (k=7)...</span>
+                    <span>Executing KNN (k=7) Regressor...</span>
                   </>
                 ) : (
                   <>
                     <Gauge className="w-4 h-4" />
-                    <span>Run Groundwater Prediction</span>
+                    <span>Run Groundwater Depth Prediction</span>
                   </>
                 )}
               </button>
@@ -327,16 +337,16 @@ export const RegressionPage: React.FC = () => {
           </div>
 
           {/* Model Specification Card */}
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs text-slate-600 space-y-1.5">
-            <p className="font-bold text-slate-800 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>Experiment B Model Verified</span>
+          <div className="bg-[#EDF8F1] rounded-2xl p-4 border border-[#D9F2E6] text-xs text-[#073B32] space-y-1.5">
+            <p className="font-bold flex items-center gap-1.5 text-[#073B32]">
+              <CheckCircle2 className="w-4 h-4 text-[#119B72]" />
+              <span>Experiment B Model Verification</span>
             </p>
-            <p><strong>Algorithm:</strong> 7. KNN Regressor (k=7, distance-weighted)</p>
+            <p><strong>Algorithm:</strong> KNN Regressor (k=7, distance-weighted metric)</p>
             <p><strong>Holdout Test Metrics:</strong> R² = 0.7766 | RMSE = 1.93 m | MAE = 1.32 m</p>
-            <p><strong>TimeSeries CV (5-Fold):</strong> Mean RMSE = 1.9066 m (± 0.8294)</p>
-            <p className="text-[11px] text-slate-400 pt-1">
-              * Note: KNN outputs deterministic point estimates; arbitrary parametric confidence intervals are intentionally excluded.
+            <p><strong>TimeSeries CV (5-Fold):</strong> Mean RMSE = 1.9066 m (&plusmn; 0.8294)</p>
+            <p className="text-[11px] text-[#718078] pt-1">
+              * Note: KNN outputs empirical deterministic point estimates; artificial parametric intervals are omitted.
             </p>
           </div>
         </div>
@@ -344,8 +354,8 @@ export const RegressionPage: React.FC = () => {
         {/* Prediction Results Column */}
         <div className="lg:col-span-7 space-y-6">
           {error && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-rose-500 mt-0.5 shrink-0" />
+            <div className="p-4 rounded-2xl bg-[#FDF2F2] border border-[#FAD2D2] text-[#E45B55] flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-[#E45B55] mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-bold">Prediction Error</p>
                 <p className="text-xs mt-0.5">{error}</p>
@@ -354,15 +364,15 @@ export const RegressionPage: React.FC = () => {
           )}
 
           {result ? (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-slate-900 to-cyan-950 p-6 text-white">
+            <div className="bg-white rounded-2xl border border-[#E3EBE5] shadow-xs overflow-hidden">
+              {/* Header in Forest Green */}
+              <div className="bg-[#073B32] p-6 text-white border-b border-[#0B4F43]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#119B72]/30 text-[#D9F2E6] border border-[#119B72]/40">
                     {result.model_used}
                   </span>
                   {result.prediction_date && (
-                    <span className="text-xs text-slate-300">
+                    <span className="text-xs text-[#D9F2E6]/75">
                       Target Date: {result.prediction_date}
                     </span>
                   )}
@@ -370,138 +380,170 @@ export const RegressionPage: React.FC = () => {
 
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-4">
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">
+                    <p className="text-xs text-[#D9F2E6]/70 uppercase tracking-wider font-medium">
                       Predicted Water Table Depth
                     </p>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-4xl font-black text-cyan-300">
+                      <span className="text-4xl sm:text-5xl font-black text-white">
                         {result.predicted_water_level_m_bgl.toFixed(2)}
                       </span>
-                      <span className="text-lg text-slate-300 font-medium">m bgl</span>
+                      <span className="text-lg text-[#D9F2E6] font-medium">m bgl</span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      meters below ground level
+                    <p className="text-xs text-[#D9F2E6]/70 mt-1">
+                      Metres below ground level to saturated zone
                     </p>
                   </div>
 
                   {result.effective_water_column_m !== null && result.effective_water_column_m !== undefined && (
-                    <div className="bg-slate-800/80 px-4 py-3 rounded-lg border border-slate-700">
-                      <p className="text-[11px] text-slate-400 uppercase font-medium">Effective Water Column</p>
-                      <p className="text-xl font-bold text-emerald-400 mt-0.5">
+                    <div className="bg-[#0B4F43] p-3 rounded-xl border border-[#119B72]/30 text-right sm:self-end">
+                      <p className="text-[10px] text-[#D9F2E6]/70 uppercase tracking-wider">
+                        Available Water Column
+                      </p>
+                      <p className="text-xl font-bold text-[#119B72]">
                         {result.effective_water_column_m.toFixed(2)} m
                       </p>
-                      <p className="text-[10px] text-slate-400">Total depth: {result.well_depth_m?.toFixed(1)} m</p>
+                      <p className="text-[10px] text-[#D9F2E6]/70">
+                        Total Borehole: {result.well_depth_m} m
+                      </p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Physical Well Water Column Visual Gauge */}
-              <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                <p className="text-xs font-bold text-slate-700 mb-3 flex items-center gap-1.5">
-                  <Gauge className="w-4 h-4 text-cyan-600" />
-                  <span>Physical Groundwater Cross-Section</span>
-                </p>
-
-                {result.well_depth_m ? (
-                  <div className="space-y-2">
-                    <div className="h-8 w-full bg-amber-100 rounded-lg overflow-hidden flex border border-amber-300 shadow-inner">
-                      {/* Unsaturated Zone (Ground surface to water table) */}
-                      <div
-                        style={{ width: `${Math.min(100, Math.max(5, (result.predicted_water_level_m_bgl / result.well_depth_m) * 100))}%` }}
-                        className="bg-amber-700/30 flex items-center justify-center text-[11px] font-bold text-amber-900 border-r-2 border-dashed border-cyan-600"
-                        title={`Unsaturated Zone: ${result.predicted_water_level_m_bgl.toFixed(2)} m`}
-                      >
-                        Unsaturated ({result.predicted_water_level_m_bgl.toFixed(1)}m)
-                      </div>
-                      {/* Saturated Aquifer Column */}
-                      <div
-                        className="bg-gradient-to-r from-cyan-500 to-blue-600 flex-1 flex items-center justify-center text-[11px] font-bold text-white shadow-sm"
-                        title={`Water Column: ${result.effective_water_column_m?.toFixed(2)} m`}
-                      >
-                        Water Column ({result.effective_water_column_m?.toFixed(1)}m)
-                      </div>
-                    </div>
-                    <div className="flex justify-between text-[11px] text-slate-500 font-mono">
-                      <span>0.0 m (Ground Surface)</span>
-                      <span>Total Depth: {result.well_depth_m.toFixed(1)} m</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-400">Well depth not recorded.</p>
-                )}
-              </div>
-
-              {/* Validation & Ground Truth Comparison */}
-              <div className="p-6 border-b border-slate-100">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                  Ground Truth Comparison & Verification
-                </h4>
-
-                {result.historical_actual_m_bgl !== null && result.historical_actual_m_bgl !== undefined ? (
-                  <div className="grid grid-cols-3 gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-                    <div>
-                      <p className="text-xs text-emerald-800 font-medium">Actual Observation</p>
-                      <p className="text-xl font-bold text-emerald-950 mt-0.5">
-                        {result.historical_actual_m_bgl.toFixed(2)} m
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-emerald-800 font-medium">Predicted Level</p>
-                      <p className="text-xl font-bold text-cyan-800 mt-0.5">
-                        {result.predicted_water_level_m_bgl.toFixed(2)} m
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-emerald-800 font-medium">Absolute Error</p>
-                      <p className="text-xl font-bold text-emerald-700 mt-0.5">
-                        {result.absolute_error_m?.toFixed(2)} m
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
-                    <p className="font-semibold text-slate-800">No Historical Observation Recorded for this exact date</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Ground truth and error are not displayed because no actual physical reading exists for this date.
+              {/* Station Context & Model Evaluation Metrics */}
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E3EBE5]">
+                    <span className="text-[10px] uppercase font-bold text-[#718078]">Operational Mode</span>
+                    <p className="text-sm font-bold text-[#182C25] mt-0.5 capitalize">
+                      {result.mode.replace('_', ' ')}
                     </p>
+                    <p className="text-[11px] text-[#718078] font-mono">{result.well_id || district}</p>
                   </div>
-                )}
-              </div>
 
-              {/* Collapsible Features Used Accordion */}
-              <div className="p-4 bg-slate-50">
-                <button
-                  onClick={() => setShowFeatures(!showFeatures)}
-                  className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-cyan-700"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Sliders className="w-3.5 h-3.5" />
-                    <span>View 16 Features Passed into Model Pipeline</span>
-                  </span>
-                  {showFeatures ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
+                  <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E3EBE5]">
+                    <span className="text-[10px] uppercase font-bold text-[#718078]">Holdout Test R²</span>
+                    <p className="text-sm font-bold text-[#119B72] mt-0.5">
+                      {result.evaluation_context.test_r2}
+                    </p>
+                    <p className="text-[11px] text-[#718078]">KNN Distance Weight</p>
+                  </div>
 
-                {showFeatures && (
-                  <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    {Object.entries(result.features_used).map(([k, v]) => (
-                      <div key={k} className="p-2 bg-white rounded border border-slate-200">
-                        <p className="text-[10px] text-slate-400 truncate">{k}</p>
-                        <p className="font-mono font-medium text-slate-800 truncate">
-                          {typeof v === 'number' ? v.toFixed(3) : String(v)}
+                  <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E3EBE5]">
+                    <span className="text-[10px] uppercase font-bold text-[#718078]">Holdout RMSE</span>
+                    <p className="text-sm font-bold text-[#182C25] mt-0.5">
+                      {result.evaluation_context.test_rmse_m} m
+                    </p>
+                    <p className="text-[11px] text-[#718078]">Root Mean Sq Error</p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-[#F8FAF7] border border-[#E3EBE5]">
+                    <span className="text-[10px] uppercase font-bold text-[#718078]">Holdout MAE</span>
+                    <p className="text-sm font-bold text-[#182C25] mt-0.5">
+                      {result.evaluation_context.test_mae_m} m
+                    </p>
+                    <p className="text-[11px] text-[#718078]">Mean Absolute Error</p>
+                  </div>
+                </div>
+
+                {/* Ground Truth Validation Box */}
+                {result.historical_actual_m_bgl !== null && result.historical_actual_m_bgl !== undefined && (
+                  <div className="p-4 rounded-xl bg-[#EDF8F1] border border-[#D9F2E6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-[#073B32]">
+                        Observed Ground Truth Benchmark Available
+                      </p>
+                      <p className="text-[11px] text-[#718078] mt-0.5">
+                        Actual monitored depth recorded on this date: <strong>{result.historical_actual_m_bgl.toFixed(2)} m bgl</strong>
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                      <div className="text-right">
+                        <span className="text-[10px] text-[#718078] uppercase">Absolute Error</span>
+                        <p className="text-sm font-bold text-[#073B32]">
+                          {result.absolute_error_m !== null && result.absolute_error_m !== undefined
+                            ? `${result.absolute_error_m.toFixed(2)} m`
+                            : 'N/A'}
                         </p>
                       </div>
-                    ))}
+                      <span className="px-2.5 py-1 rounded-full bg-[#119B72] text-white text-xs font-bold">
+                        Verified
+                      </span>
+                    </div>
                   </div>
                 )}
+
+                {/* Groundwater Depth Category & Gauge Indicator */}
+                <div className="p-4 rounded-xl border border-[#E3EBE5] bg-[#F8FAF7] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-[#182C25] uppercase tracking-wider flex items-center gap-1.5">
+                      <Droplets className="w-4 h-4 text-[#119B72]" />
+                      <span>Predicted Groundwater Table Classification</span>
+                    </h3>
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#EDF8F1] text-[#073B32] border border-[#D9F2E6]">
+                      {result.predicted_water_level_m_bgl < 5
+                        ? 'Shallow Zone (< 5 m)'
+                        : result.predicted_water_level_m_bgl < 10
+                          ? 'Moderate Zone (5 – 10 m)'
+                          : result.predicted_water_level_m_bgl < 15
+                            ? 'Deep Zone (10 – 15 m)'
+                            : 'Very Deep Zone (> 15 m)'}
+                    </span>
+                  </div>
+
+                  {/* Visual Saturated Depth Scale */}
+                  <div className="space-y-1">
+                    <div className="w-full h-3 rounded-full bg-[#E3EBE5] overflow-hidden flex">
+                      <div className="bg-[#119B72] h-full" style={{ width: '25%' }} title="Shallow: 0-5m" />
+                      <div className="bg-[#0B4F43] h-full" style={{ width: '25%' }} title="Moderate: 5-10m" />
+                      <div className="bg-[#E9A23B] h-full" style={{ width: '25%' }} title="Deep: 10-15m" />
+                      <div className="bg-[#E45B55] h-full" style={{ width: '25%' }} title="Very Deep: >15m" />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-[#718078] font-mono px-0.5">
+                      <span>0 m (Surface)</span>
+                      <span>5 m</span>
+                      <span>10 m</span>
+                      <span>15 m</span>
+                      <span>25+ m (Deep)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Collapsible Feature Inputs Inspector */}
+                <div className="border border-[#E3EBE5] rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setShowFeatures(!showFeatures)}
+                    className="w-full px-4 py-3 bg-[#F8FAF7] hover:bg-[#EDF8F1] flex items-center justify-between text-xs font-bold text-[#182C25] transition-colors"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Sliders className="w-4 h-4 text-[#119B72]" />
+                      <span>Full 16-Dimensional Model Input Features Vector</span>
+                    </span>
+                    {showFeatures ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+
+                  {showFeatures && (
+                    <div className="p-4 bg-white grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                      {Object.entries(result.features_used).map(([k, v]) => (
+                        <div key={k} className="p-2 rounded-lg bg-[#F8FAF7] border border-[#E3EBE5]">
+                          <span className="text-[10px] text-[#718078] block truncate">{k}</span>
+                          <span className="font-bold text-[#182C25] font-mono mt-0.5 block">
+                            {typeof v === 'number' ? v.toFixed(2) : String(v)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-400">
-              <Droplets className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-              <p className="text-sm font-semibold text-slate-600">No Prediction Yet</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Select a well ID and monitoring date or configure a custom scenario to predict water table depth.
+            <div className="bg-white rounded-2xl border border-[#E3EBE5] p-12 text-center text-[#718078] space-y-3">
+              <Droplets className="w-12 h-12 text-[#CDDAD1] mx-auto" />
+              <h3 className="text-base font-bold text-[#182C25]">Awaiting Prediction Request</h3>
+              <p className="text-xs text-[#718078] max-w-md mx-auto leading-relaxed">
+                Select a verified well identifier preset or enter custom hydrological conditions on the left to trigger the distance-weighted KNN (k=7) prediction pipeline.
               </p>
             </div>
           )}

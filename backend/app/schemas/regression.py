@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
 
 class PredictionMode(str, Enum):
@@ -65,3 +65,37 @@ class WaterLevelPredictionResponse(BaseModel):
     absolute_error_m: Optional[float] = Field(None, description="Absolute difference between predicted and actual observation")
     features_used: Dict[str, Any] = Field(..., description="Complete 16-feature vector passed into the model pipeline")
     evaluation_context: EvaluationContext = Field(default_factory=EvaluationContext)
+
+class WellMetadataItem(BaseModel):
+    well_id: str
+    district: str
+    block: str
+    village: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    well_depth_m: Optional[float] = None
+    well_type: str = "Dug Well"
+    latest_date: Optional[str] = None
+    total_observations: int = 0
+
+class WellsListResponse(BaseModel):
+    total: int
+    district_filter: Optional[str] = None
+    wells: List[WellMetadataItem]
+
+class WellHistoricalRecord(BaseModel):
+    date: str
+    water_level_m_bgl: Optional[float] = None
+    rainfall_30d: float = 0.0
+    season: str = ""
+
+class WellDetailsResponse(BaseModel):
+    well_id: str
+    district: str
+    block: str
+    village: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    well_depth_m: Optional[float] = None
+    well_type: str = "Dug Well"
+    historical_records: List[WellHistoricalRecord]

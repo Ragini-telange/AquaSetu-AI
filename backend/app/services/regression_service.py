@@ -4,7 +4,7 @@ import math
 import joblib
 import pandas as pd
 import numpy as np
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, List
 from fastapi import HTTPException
 
 from app.core.config import settings
@@ -22,6 +22,7 @@ class RegressionService:
         self.df_historical: Optional[pd.DataFrame] = None
         self.well_index: Dict[str, pd.DataFrame] = {}
         self.well_date_index: Dict[Tuple[str, str], pd.Series] = {}
+        self.wells_metadata: List[Dict[str, Any]] = []
         self.is_initialized = False
 
     def initialize(self):
@@ -46,10 +47,79 @@ class RegressionService:
         
         # Build in-memory lookup cache by well_id
         for well_id, group in self.df_historical.groupby('Well ID'):
-            self.well_index[str(well_id)] = group.sort_values('Date').reset_index(drop=True)
+            sorted_group = group.sort_values('Date').reset_index(drop=True)
+            self.well_index[str(well_id)] = sorted_group
+
+            r = sorted_group.iloc[-1]
+            lat = float(r['Latitude']) if ('Latitude' in r and not pd.isna(r['Latitude'])) else None
+            lon = float(r['Longitude']) if ('Longitude' in r and not pd.isna(r['Longitude'])) else None
+            depth = float(r['Well Depth, m']) if ('Well Depth, m' in r and not pd.isna(r['Well Depth, m'])) else None
+            self.wells_metadata.append({
+                'well_id': str(well_id),
+                'district': str(r.get('District Name', '')),
+                'block': str(r.get('Block Name', '')),
+                'village': str(r.get('Village', '')),
+                'latitude': lat,
+                'longitude': lon,
+                'well_depth_m': depth,
+                'well_type': str(r.get('Well Type (Dug Well, Piezometer)', 'Dug Well')),
+                'latest_date': str(r.get('Date', '')),
+                'total_observations': len(sorted_group)
+            })
 
         self.is_initialized = True
         print(f"[RegressionService] Initialized with {len(self.well_index)} wells and {len(self.df_historical)} records.")
+
+    def get_wells(self, district: Optional[str] = None, limit: Optional[int] = None) -> List[Dict[str, Any]]:
+        if not self.is_initialized:
+            self.initialize()
+        if district:
+            d_clean = district.strip().lower()
+            res = [w for w in self.wells_metadata if w['district'].lower() == d_clean]
+        else:
+            res = self.wells_metadata
+        if limit and limit > 0:
+            return res[:limit]
+        return res
+
+    def get_districts(self) -> List[str]:
+        if not self.is_initialized:
+            self.initialize()
+        districts = sorted(list(set(w['district'] for w in self.wells_metadata if w['district'])))
+        return districts
+
+    def get_well_details(self, well_id: str) -> Optional[Dict[str, Any]]:
+        if not self.is_initialized:
+            self.initialize()
+        clean_id = str(well_id).strip()
+        if clean_id not in self.well_index:
+            return None
+        group = self.well_index[clean_id]
+        records = []
+        for _, row in group.iterrows():
+            wl = row.get('Water Level, m bgl')
+            rain = row.get('Rain_Prior_30d', 0.0)
+            records.append({
+                'date': str(row.get('Date', '')),
+                'water_level_m_bgl': round(float(wl), 2) if not pd.isna(wl) else None,
+                'rainfall_30d': round(float(rain), 1) if not pd.isna(rain) else 0.0,
+                'season': str(row.get('Season', ''))
+            })
+        r = group.iloc[-1]
+        lat = float(r['Latitude']) if ('Latitude' in r and not pd.isna(r['Latitude'])) else None
+        lon = float(r['Longitude']) if ('Longitude' in r and not pd.isna(r['Longitude'])) else None
+        depth = float(r['Well Depth, m']) if ('Well Depth, m' in r and not pd.isna(r['Well Depth, m'])) else None
+        return {
+            'well_id': clean_id,
+            'district': str(r.get('District Name', '')),
+            'block': str(r.get('Block Name', '')),
+            'village': str(r.get('Village', '')),
+            'latitude': lat,
+            'longitude': lon,
+            'well_depth_m': depth,
+            'well_type': str(r.get('Well Type (Dug Well, Piezometer)', 'Dug Well')),
+            'historical_records': records
+        }
 
     def predict(self, req: WaterLevelPredictionRequest) -> WaterLevelPredictionResponse:
         if not self.is_initialized:

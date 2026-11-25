@@ -1,38 +1,77 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+@theme {
+  --color-forest-950: #073B32;
+  --color-forest-900: #0B4F43;
+  --color-forest-800: #0E6254;
+  --color-emerald-primary: #119B72;
+  --color-emerald-hover: #0E8360;
+  --color-emerald-dark: #09684C;
+  --color-mint-fresh: #D9F2E6;
+  --color-mint-light: #EDF8F1;
+  --color-warm-white: #F8FAF7;
+  --color-card-white: #FFFFFF;
+  --color-text-main: #182C25;
+  --color-text-muted: #718078;
+  --color-border-subtle: #E3EBE5;
+  --color-border-strong: #CDDAD1;
+  --color-warning-amber: #E9A23B;
+  --color-critical-red: #E45B55;
+}
+
 :root {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
+  --bg-warm-white: #F8FAF7;
+  --text-main: #182C25;
+  --border-subtle: #E3EBE5;
 }
 
 body {
   margin: 0;
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #F8FAF7;
+  color: #182C25;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbars */
+/* Custom Scrollbars in environmental tones */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #EDF8F1;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #CDDAD1;
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #119B72;
 }
 
-/* Leaflet map container fix */
+/* Leaflet map styles */
 .leaflet-container {
   width: 100%;
   height: 100%;
   border-radius: 0.75rem;
   z-index: 10;
+  background-color: #F8FAF7;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(7, 59, 50, 0.15);
+  border: 1px solid #E3EBE5;
+}
+
+.custom-map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

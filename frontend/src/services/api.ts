@@ -54,6 +54,50 @@ export interface WaterLevelPredictionResponse {
   evaluation_context: EvaluationContext;
 }
 
+export interface WellMetadataItem {
+  well_id: string;
+  district: string;
+  block: string;
+  village: string;
+  latitude: number | null;
+  longitude: number | null;
+  well_depth_m: number | null;
+  well_type: string;
+  latest_date: string | null;
+  total_observations: number;
+}
+
+export interface WellsListResponse {
+  total: number;
+  district_filter: string | null;
+  wells: WellMetadataItem[];
+}
+
+export interface WellHistoricalRecord {
+  date: string;
+  water_level_m_bgl: number | null;
+  rainfall_30d: number;
+  season: string;
+}
+
+export interface WellDetailsResponse {
+  well_id: string;
+  district: string;
+  block: string;
+  village: string;
+  latitude: number | null;
+  longitude: number | null;
+  well_depth_m: number | null;
+  well_type: string;
+  historical_records: WellHistoricalRecord[];
+}
+
+export interface LocationsListResponse {
+  total: number;
+  district_filter: string | null;
+  locations: WellLocationItem[];
+}
+
 export interface WaterPotabilityRequest {
   pH: number;
   Electrical_Conductivity: number;
@@ -177,6 +221,28 @@ async function postJSON<T>(endpoint: string, body: any): Promise<T> {
   return res.json();
 }
 
+async function getJSON<T>(endpoint: string): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+  });
+
+  if (!res.ok) {
+    let errorMsg = `Server error ${res.status}`;
+    try {
+      const errData = await res.json();
+      if (errData.detail) {
+        errorMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+      }
+    } catch {
+      // ignore
+    }
+    throw new Error(errorMsg);
+  }
+
+  return res.json();
+}
+
 export async function checkBackendHealth(): Promise<HealthResponse> {
   const res = await fetch(`${API_BASE_URL}/api/v1/health`);
   if (!res.ok) {
@@ -199,4 +265,32 @@ export async function findNearestWells(req: NearestWellRequest): Promise<Nearest
 
 export async function findPuneRoute(req: PuneRoutingRequest): Promise<PuneRoutingResponse> {
   return postJSON<PuneRoutingResponse>('/api/v1/routing/pune', req);
+}
+
+export async function getRegressionWells(district?: string, limit?: number): Promise<WellsListResponse> {
+  const params = new URLSearchParams();
+  if (district) params.append('district', district);
+  if (limit) params.append('limit', String(limit));
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return getJSON<WellsListResponse>(`/api/v1/regression/wells${query}`);
+}
+
+export async function getRegressionDistricts(): Promise<string[]> {
+  return getJSON<string[]>('/api/v1/regression/districts');
+}
+
+export async function getWellDetails(wellId: string): Promise<WellDetailsResponse> {
+  return getJSON<WellDetailsResponse>(`/api/v1/regression/wells/${encodeURIComponent(wellId)}`);
+}
+
+export async function getSpatialLocations(district?: string, limit?: number): Promise<LocationsListResponse> {
+  const params = new URLSearchParams();
+  if (district) params.append('district', district);
+  if (limit) params.append('limit', String(limit));
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return getJSON<LocationsListResponse>(`/api/v1/spatial/locations${query}`);
+}
+
+export async function getSpatialDistricts(): Promise<string[]> {
+  return getJSON<string[]>('/api/v1/spatial/districts');
 }
