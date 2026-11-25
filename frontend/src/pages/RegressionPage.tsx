@@ -12,6 +12,59 @@ import {
 import { predictWaterLevel } from '../services/api';
 import type { WaterLevelPredictionResponse, WaterLevelPredictionRequest } from '../services/api';
 
+// Helper: Depth range classification & color mapping
+const getDepthClassification = (depth: number) => {
+  if (depth < 5) {
+    return {
+      label: 'Shallow Zone (0–5 m)',
+      category: 'Shallow',
+      color: '#119B72',
+      badgeClass: 'bg-[#EDF8F1] text-[#073B32] border-[#D9F2E6]',
+    };
+  } else if (depth < 10) {
+    return {
+      label: 'Moderate Zone (5–10 m)',
+      category: 'Moderate',
+      color: '#0B4F43',
+      badgeClass: 'bg-[#0B4F43]/15 text-[#073B32] border-[#0B4F43]/30',
+    };
+  } else if (depth < 15) {
+    return {
+      label: 'Deep Zone (10–15 m)',
+      category: 'Deep',
+      color: '#E9A23B',
+      badgeClass: 'bg-[#FFF8ED] text-[#975A16] border-[#FEEBC8]',
+    };
+  } else {
+    return {
+      label: 'Very Deep Zone (Above 15 m)',
+      category: 'Very Deep',
+      color: '#E45B55',
+      badgeClass: 'bg-[#FDF2F2] text-[#E45B55] border-[#FAD2D2]',
+    };
+  }
+};
+
+// Helper: Calculate scale marker position percentage across the 4 continuous ranges
+const getMarkerPositionPercent = (depth: number): number => {
+  if (depth <= 0) return 2;
+  if (depth <= 5) {
+    // 0 - 5 m maps to 0% - 25% (Green)
+    return Math.max(2, (depth / 5) * 25);
+  } else if (depth <= 10) {
+    // 5 - 10 m maps to 25% - 50% (Dark Green)
+    return 25 + ((depth - 5) / 5) * 25;
+  } else if (depth <= 15) {
+    // 10 - 15 m maps to 50% - 75% (Yellow)
+    return 50 + ((depth - 10) / 5) * 25;
+  } else {
+    // Above 15 m maps to 75% - 100% (Red)
+    // Scale calibrated with 15 - 25 m span, clamped to 98%
+    const excess = Math.min(depth - 15, 10);
+    return Math.min(98, 75 + (excess / 10) * 25);
+  }
+};
+
 export const RegressionPage: React.FC = () => {
   const [mode, setMode] = useState<'historical_lookup' | 'custom_scenario'>('historical_lookup');
 
@@ -481,31 +534,82 @@ export const RegressionPage: React.FC = () => {
                       <Droplets className="w-4 h-4 text-[#119B72]" />
                       <span>Predicted Groundwater Table Classification</span>
                     </h3>
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#EDF8F1] text-[#073B32] border border-[#D9F2E6]">
-                      {result.predicted_water_level_m_bgl < 5
-                        ? 'Shallow Zone (< 5 m)'
-                        : result.predicted_water_level_m_bgl < 10
-                          ? 'Moderate Zone (5 – 10 m)'
-                          : result.predicted_water_level_m_bgl < 15
-                            ? 'Deep Zone (10 – 15 m)'
-                            : 'Very Deep Zone (> 15 m)'}
+                    <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border transition-colors ${getDepthClassification(result.predicted_water_level_m_bgl).badgeClass}`}>
+                      {getDepthClassification(result.predicted_water_level_m_bgl).label}
                     </span>
                   </div>
 
-                  {/* Visual Saturated Depth Scale */}
-                  <div className="space-y-1">
-                    <div className="w-full h-3 rounded-full bg-[#E3EBE5] overflow-hidden flex">
-                      <div className="bg-[#119B72] h-full" style={{ width: '25%' }} title="Shallow: 0-5m" />
-                      <div className="bg-[#0B4F43] h-full" style={{ width: '25%' }} title="Moderate: 5-10m" />
-                      <div className="bg-[#E9A23B] h-full" style={{ width: '25%' }} title="Deep: 10-15m" />
-                      <div className="bg-[#E45B55] h-full" style={{ width: '25%' }} title="Very Deep: >15m" />
+                  {/* Visual Saturated Depth Scale with Dynamic Indicator */}
+                  <div className="pt-7 pb-1">
+                    <div className="relative">
+                      {/* Floating Marker Tooltip with Pin */}
+                      <div
+                        className="absolute -top-7 -translate-x-1/2 flex flex-col items-center transition-all duration-500 ease-out z-20 pointer-events-none"
+                        style={{ left: `${getMarkerPositionPercent(result.predicted_water_level_m_bgl)}%` }}
+                      >
+                        <div
+                          className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono shadow-md text-white whitespace-nowrap flex items-center gap-1"
+                          style={{ backgroundColor: getDepthClassification(result.predicted_water_level_m_bgl).color }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          <span>{result.predicted_water_level_m_bgl.toFixed(2)} m bgl</span>
+                        </div>
+                        <div
+                          className="w-0 h-0 border-x-4 border-x-transparent border-t-[5px]"
+                          style={{ borderTopColor: getDepthClassification(result.predicted_water_level_m_bgl).color }}
+                        />
+                      </div>
+
+                      {/* Continuous 4-Segment Scale Bar */}
+                      <div className="relative w-full h-3.5 rounded-full bg-[#E3EBE5] overflow-hidden flex shadow-inner">
+                        <div className="bg-[#119B72] h-full" style={{ width: '25%' }} title="0–5 m: Green (Shallow)" />
+                        <div className="bg-[#0B4F43] h-full" style={{ width: '25%' }} title="5–10 m: Dark Green (Moderate)" />
+                        <div className="bg-[#E9A23B] h-full" style={{ width: '25%' }} title="10–15 m: Yellow (Deep)" />
+                        <div className="bg-[#E45B55] h-full" style={{ width: '25%' }} title="Above 15 m: Red (Very Deep)" />
+                      </div>
+
+                      {/* Visual Marker Needle on the Bar */}
+                      <div
+                        className="absolute -top-[2px] h-[18px] w-1 bg-white border border-[#182C25] rounded-full -translate-x-1/2 transition-all duration-500 ease-out z-10 pointer-events-none shadow"
+                        style={{ left: `${getMarkerPositionPercent(result.predicted_water_level_m_bgl)}%` }}
+                      />
                     </div>
-                    <div className="flex justify-between text-[10px] text-[#718078] font-mono px-0.5">
+
+                    {/* Scale Boundaries and Range Ticks */}
+                    <div className="flex justify-between text-[10px] text-[#718078] font-mono px-0.5 pt-2">
                       <span>0 m (Surface)</span>
                       <span>5 m</span>
                       <span>10 m</span>
                       <span>15 m</span>
                       <span>25+ m (Deep)</span>
+                    </div>
+
+                    {/* Depth Range & Color Legend Indicators */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-[#E3EBE5] mt-2.5">
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] transition-colors ${
+                        result.predicted_water_level_m_bgl < 5 ? 'bg-[#EDF8F1] font-bold text-[#073B32]' : 'text-[#718078]'
+                      }`}>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#119B72] shrink-0" />
+                        <span>0–5 m: Green</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] transition-colors ${
+                        result.predicted_water_level_m_bgl >= 5 && result.predicted_water_level_m_bgl < 10 ? 'bg-[#EDF8F1] font-bold text-[#073B32]' : 'text-[#718078]'
+                      }`}>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#0B4F43] shrink-0" />
+                        <span>5–10 m: Dark Green</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] transition-colors ${
+                        result.predicted_water_level_m_bgl >= 10 && result.predicted_water_level_m_bgl < 15 ? 'bg-[#FFF8ED] font-bold text-[#975A16]' : 'text-[#718078]'
+                      }`}>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#E9A23B] shrink-0" />
+                        <span>10–15 m: Yellow</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] transition-colors ${
+                        result.predicted_water_level_m_bgl >= 15 ? 'bg-[#FDF2F2] font-bold text-[#E45B55]' : 'text-[#718078]'
+                      }`}>
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#E45B55] shrink-0" />
+                        <span>Above 15 m: Red</span>
+                      </div>
                     </div>
                   </div>
                 </div>
