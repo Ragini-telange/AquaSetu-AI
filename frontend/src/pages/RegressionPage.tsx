@@ -8,7 +8,7 @@ export const RegressionPage: React.FC = () => {
   
   // Mode A state
   const [wellId, setWellId] = useState<string>('W153803073591301');
-  const [predictionDate, setPredictionDate] = useState<string>('2024-05-15');
+  const [predictionDate, setPredictionDate] = useState<string>('2024-05-29');
 
   // Mode B state
   const [district, setDistrict] = useState<string>('Pune');
@@ -30,10 +30,10 @@ export const RegressionPage: React.FC = () => {
 
   // Sample well presets
   const sampleWells = [
-    { id: 'W153803073591301', name: 'Matne (Sindhudurg)', date: '2024-05-15' },
-    { id: 'W183100073510001', name: 'Pune City (Haveli)', date: '2024-01-20' },
-    { id: 'W205700078330001', name: 'Wardha Sub-district', date: '2023-11-10' },
-    { id: 'W174800075550001', name: 'Solapur Dug Well', date: '2022-08-18' }
+    { id: 'W153803073591301', name: 'Matne (Sindhudurg)', date: '2024-05-29' },
+    { id: 'W182646073521001', name: 'Katraj, Pune (Haveli)', date: '2024-05-28' },
+    { id: 'W204427078364501', name: 'Wardha Sub-district', date: '2024-06-01' },
+    { id: 'W174810075540001', name: 'Mardi, Solapur (Dug Well)', date: '2024-06-06' }
   ];
 
   const handlePredict = async (e: React.FormEvent) => {
@@ -174,7 +174,7 @@ export const RegressionPage: React.FC = () => {
                         type="text"
                         value={predictionDate}
                         onChange={(e) => setPredictionDate(e.target.value)}
-                        placeholder="e.g. 2024-05-15 (or leave empty for latest)"
+                        placeholder="e.g. 2024-05-29 (or leave empty for latest)"
                         className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
                       />
                       <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
