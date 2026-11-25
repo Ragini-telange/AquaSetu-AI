@@ -5,7 +5,7 @@ import type { WaterLevelPredictionResponse, WaterLevelPredictionRequest } from '
 
 export const RegressionPage: React.FC = () => {
   const [mode, setMode] = useState<'historical_lookup' | 'custom_scenario'>('historical_lookup');
-  
+
   // Mode A state
   const [wellId, setWellId] = useState<string>('W153803073591301');
   const [predictionDate, setPredictionDate] = useState<string>('2024-05-29');
@@ -96,21 +96,19 @@ export const RegressionPage: React.FC = () => {
         <div className="flex bg-slate-100 p-1 rounded-xl self-start sm:self-auto border border-slate-200">
           <button
             onClick={() => setMode('historical_lookup')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-              mode === 'historical_lookup'
-                ? 'bg-white text-cyan-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === 'historical_lookup'
+              ? 'bg-white text-cyan-700 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             Historical Well Lookup
           </button>
           <button
             onClick={() => setMode('custom_scenario')}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-              mode === 'custom_scenario'
-                ? 'bg-white text-cyan-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === 'custom_scenario'
+              ? 'bg-white text-cyan-700 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             Custom Scenario
           </button>
@@ -153,11 +151,10 @@ export const RegressionPage: React.FC = () => {
                             setWellId(s.id);
                             setPredictionDate(s.date);
                           }}
-                          className={`text-xs px-2.5 py-1 rounded-md border text-left transition-colors ${
-                            wellId === s.id
-                              ? 'bg-cyan-50 border-cyan-400 text-cyan-800 font-medium'
-                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                          }`}
+                          className={`text-xs px-2.5 py-1 rounded-md border text-left transition-colors ${wellId === s.id
+                            ? 'bg-cyan-50 border-cyan-400 text-cyan-800 font-medium'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                            }`}
                         >
                           {s.name}
                         </button>
@@ -410,7 +407,7 @@ export const RegressionPage: React.FC = () => {
                   <div className="space-y-2">
                     <div className="h-8 w-full bg-amber-100 rounded-lg overflow-hidden flex border border-amber-300 shadow-inner">
                       {/* Unsaturated Zone (Ground surface to water table) */}
-                      <div 
+                      <div
                         style={{ width: `${Math.min(100, Math.max(5, (result.predicted_water_level_m_bgl / result.well_depth_m) * 100))}%` }}
                         className="bg-amber-700/30 flex items-center justify-center text-[11px] font-bold text-amber-900 border-r-2 border-dashed border-cyan-600"
                         title={`Unsaturated Zone: ${result.predicted_water_level_m_bgl.toFixed(2)} m`}
@@ -418,7 +415,7 @@ export const RegressionPage: React.FC = () => {
                         Unsaturated ({result.predicted_water_level_m_bgl.toFixed(1)}m)
                       </div>
                       {/* Saturated Aquifer Column */}
-                      <div 
+                      <div
                         className="bg-gradient-to-r from-cyan-500 to-blue-600 flex-1 flex items-center justify-center text-[11px] font-bold text-white shadow-sm"
                         title={`Water Column: ${result.effective_water_column_m?.toFixed(2)} m`}
                       >
