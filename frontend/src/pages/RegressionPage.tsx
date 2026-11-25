@@ -106,8 +106,8 @@ export const RegressionPage: React.FC = () => {
           <button
             onClick={() => setMode('historical_lookup')}
             className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === 'historical_lookup'
-                ? 'bg-white text-[#073B32] shadow-xs'
-                : 'text-[#718078] hover:text-[#182C25]'
+              ? 'bg-white text-[#073B32] shadow-xs'
+              : 'text-[#718078] hover:text-[#182C25]'
               }`}
           >
             Historical Well Lookup
@@ -115,8 +115,8 @@ export const RegressionPage: React.FC = () => {
           <button
             onClick={() => setMode('custom_scenario')}
             className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === 'custom_scenario'
-                ? 'bg-white text-[#073B32] shadow-xs'
-                : 'text-[#718078] hover:text-[#182C25]'
+              ? 'bg-white text-[#073B32] shadow-xs'
+              : 'text-[#718078] hover:text-[#182C25]'
               }`}
           >
             Custom Hydrological Scenario
@@ -161,8 +161,8 @@ export const RegressionPage: React.FC = () => {
                             setPredictionDate(s.date);
                           }}
                           className={`text-left p-2.5 rounded-xl border transition-all text-xs ${wellId === s.id
-                              ? 'bg-[#EDF8F1] border-[#119B72] text-[#073B32] font-semibold'
-                              : 'bg-white border-[#E3EBE5] text-[#182C25] hover:border-[#CDDAD1]'
+                            ? 'bg-[#EDF8F1] border-[#119B72] text-[#073B32] font-semibold'
+                            : 'bg-white border-[#E3EBE5] text-[#182C25] hover:border-[#CDDAD1]'
                             }`}
                         >
                           <p className="font-semibold truncate">{s.name}</p>

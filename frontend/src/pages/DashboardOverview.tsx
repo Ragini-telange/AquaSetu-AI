@@ -182,8 +182,8 @@ export const DashboardOverview: React.FC<DashboardProps> = ({ onNavigate }) => {
             <button
               onClick={() => setActivePreviewLayer('regression')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activePreviewLayer === 'regression'
-                  ? 'bg-[#073B32] text-white'
-                  : 'bg-[#F8FAF7] text-[#718078] hover:text-[#182C25] border border-[#E3EBE5]'
+                ? 'bg-[#073B32] text-white'
+                : 'bg-[#F8FAF7] text-[#718078] hover:text-[#182C25] border border-[#E3EBE5]'
                 }`}
             >
               Groundwater Depth
@@ -191,8 +191,8 @@ export const DashboardOverview: React.FC<DashboardProps> = ({ onNavigate }) => {
             <button
               onClick={() => setActivePreviewLayer('spatial')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activePreviewLayer === 'spatial'
-                  ? 'bg-[#073B32] text-white'
-                  : 'bg-[#F8FAF7] text-[#718078] hover:text-[#182C25] border border-[#E3EBE5]'
+                ? 'bg-[#073B32] text-white'
+                : 'bg-[#F8FAF7] text-[#718078] hover:text-[#182C25] border border-[#E3EBE5]'
                 }`}
             >
               Spatial Search

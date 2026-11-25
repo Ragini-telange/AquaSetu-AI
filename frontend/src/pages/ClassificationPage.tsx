@@ -378,8 +378,8 @@ export const ClassificationPage: React.FC = () => {
               {/* Primary Potability Outcome Banner */}
               <div
                 className={`p-5 rounded-2xl border flex items-center justify-between ${result.potability_code === 1
-                    ? 'bg-[#EDF8F1] border-[#D9F2E6] text-[#073B32]'
-                    : 'bg-[#FDF2F2] border-[#FAD2D2] text-[#E45B55]'
+                  ? 'bg-[#EDF8F1] border-[#D9F2E6] text-[#073B32]'
+                  : 'bg-[#FDF2F2] border-[#FAD2D2] text-[#E45B55]'
                   }`}
               >
                 <div>
@@ -452,8 +452,8 @@ export const ClassificationPage: React.FC = () => {
                   </h4>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${result.exceeded_parameters.length === 0
-                        ? 'bg-[#EDF8F1] text-[#119B72] border border-[#D9F2E6]'
-                        : 'bg-[#FDF2F2] text-[#E45B55] border border-[#FAD2D2]'
+                      ? 'bg-[#EDF8F1] text-[#119B72] border border-[#D9F2E6]'
+                      : 'bg-[#FDF2F2] text-[#E45B55] border border-[#FAD2D2]'
                       }`}
                   >
                     {result.exceeded_parameters.length === 0
