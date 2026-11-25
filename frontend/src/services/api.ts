@@ -1,5 +1,5 @@
 /**
- * AquaGuard API Client Service
+ * AquaSetu API Client Service
  * Connects directly to the FastAPI backend running at http://localhost:8000
  */
 

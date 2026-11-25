@@ -15,7 +15,7 @@ export const AboutPage: React.FC = () => {
           <span>System Architecture &bull; Technical Specifications</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#182C25] mt-1">
-          About AquaGuard AI Environmental Platform
+          About AquaSetu AI Environmental Platform
         </h1>
         <p className="text-[#718078] text-xs sm:text-sm mt-1">
           Integrated Environmental Decision Support Platform combining machine learning groundwater depth prediction, water potability screening, spatial GIS discovery, and directed road network pathfinding.
@@ -32,7 +32,7 @@ export const AboutPage: React.FC = () => {
           Empirical Water Resource Intelligence for Maharashtra State
         </h2>
         <p className="text-xs sm:text-sm text-[#D9F2E6]/85 leading-relaxed max-w-3xl">
-          AquaGuard AI was developed to replace fragmented water spreadsheets and opaque forecasts with a reproducible, empirical environmental intelligence engine. By anchoring models strictly to verified Central Ground Water Board (CGWB) monitoring stations and statutory Bureau of Indian Standards (BIS IS 10500:2012) regulations, the platform delivers trustworthy decisions without data fabrication.
+          AquaSetu AI was developed to replace fragmented water spreadsheets and opaque forecasts with a reproducible, empirical environmental intelligence engine. By anchoring models strictly to verified Central Ground Water Board (CGWB) monitoring stations and statutory Bureau of Indian Standards (BIS IS 10500:2012) regulations, the platform delivers trustworthy decisions without data fabrication.
         </p>
       </div>
 
@@ -142,7 +142,7 @@ export const AboutPage: React.FC = () => {
           <span>Statutory Compliance &amp; Data Integrity Commitment</span>
         </h3>
         <p className="text-xs text-[#718078] leading-relaxed">
-          In strict compliance with software engineering and scientific standards, AquaGuard AI forbids synthetic coordinate generation, dummy prediction numbers, and stock photographic imagery. All monitoring stations, depths, road segments, and chemical parameters reflect verified repositories audited in the AquaGuard AI codebase.
+          In strict compliance with software engineering and scientific standards, AquaSetu AI forbids synthetic coordinate generation, dummy prediction numbers, and stock photographic imagery. All monitoring stations, depths, road segments, and chemical parameters reflect verified repositories audited in the AquaSetu AI codebase.
         </p>
       </div>
     </div>

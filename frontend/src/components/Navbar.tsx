@@ -50,13 +50,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-300 bg-clip-text text-transparent">
-                  AquaGuard AI
+                  AquaSetu AI
                 </span>
                 <span className="text-[10px] font-semibold bg-cyan-900/60 text-cyan-300 border border-cyan-700/50 px-1.5 py-0.5 rounded">
                   v1.0
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Groundwater Intelligence & Potability System</p>
+              <p className="text-xs text-slate-400">Water Intelligence &amp; Environmental Monitoring Platform</p>
             </div>
           </div>
 

@@ -62,7 +62,7 @@ export const DashboardOverview: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-2.5">
-            AquaGuard AI &mdash; Groundwater Intelligence &amp; Potability System
+            AquaSetu AI &mdash; Water Intelligence &amp; Environmental Monitoring Platform
           </h1>
 
           <p className="text-[#D9F2E6]/85 text-xs sm:text-sm leading-relaxed max-w-3xl mb-6">

@@ -167,7 +167,7 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors | AquaGuard AI',
+      attribution: '&copy; OpenStreetMap contributors | AquaSetu AI',
       maxZoom: 18,
     }).addTo(map);
 

@@ -79,11 +79,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onCloseMobile();
         }}
         title={collapsed ? item.label : undefined}
-        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 relative group ${
-          isActive
+        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 relative group ${isActive
             ? 'bg-[#119B72] text-white shadow-sm shadow-[#119B72]/30 font-semibold'
             : 'text-[#D9F2E6]/85 hover:text-white hover:bg-[#0B4F43]'
-        } ${collapsed ? 'justify-center px-2' : ''}`}
+          } ${collapsed ? 'justify-center px-2' : ''}`}
       >
         {/* Active Pill Indicator on Left */}
         {isActive && !collapsed && (
@@ -96,16 +95,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex-1 flex items-center justify-between overflow-hidden">
             <span className="truncate tracking-tight">{item.label}</span>
             {item.badge && (
-              <span className={`text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${
-                isActive ? 'bg-[#073B32]/40 text-[#D9F2E6]' : 'bg-[#0B4F43] text-[#D9F2E6]/80'
-              }`}>
+              <span className={`text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${isActive ? 'bg-[#073B32]/40 text-[#D9F2E6]' : 'bg-[#0B4F43] text-[#D9F2E6]/80'
+                }`}>
                 {item.badge}
               </span>
             )}
             {item.tag && !item.badge && (
-              <span className={`text-[9px] font-normal truncate max-w-[70px] ${
-                isActive ? 'text-white/80' : 'text-[#D9F2E6]/60'
-              }`}>
+              <span className={`text-[9px] font-normal truncate max-w-[70px] ${isActive ? 'text-white/80' : 'text-[#D9F2E6]/60'
+                }`}>
                 {item.tag}
               </span>
             )}
@@ -119,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <div className="flex flex-col h-full bg-[#073B32] text-white select-none">
       {/* Brand & Header Area */}
       <div className={`p-4 flex items-center ${collapsed ? 'justify-center' : 'justify-between'} border-b border-[#0B4F43]`}>
-        <div 
+        <div
           onClick={() => { onTabChange('dashboard'); onCloseMobile(); }}
           className="flex items-center gap-3 cursor-pointer group"
         >
@@ -132,14 +129,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="overflow-hidden">
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-base tracking-tight text-white">
-                  AquaGuard
+                  AquaSetu
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-[#119B72]/30 text-[#D9F2E6] border border-[#119B72]/50 px-1.5 py-0.2 rounded">
                   AI
                 </span>
               </div>
               <p className="text-[11px] text-[#D9F2E6]/70 truncate tracking-tight font-normal">
-                Environmental Intelligence
+                Water Intelligence &amp; Environmental Monitoring Platform
               </p>
             </div>
           )}
@@ -222,9 +219,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Desktop Fixed Left Sidebar */}
       <aside
-        className={`hidden md:block fixed top-0 bottom-0 left-0 z-40 transition-all duration-200 border-r border-[#0B4F43] shadow-lg ${
-          collapsed ? 'w-20' : 'w-64'
-        }`}
+        className={`hidden md:block fixed top-0 bottom-0 left-0 z-40 transition-all duration-200 border-r border-[#0B4F43] shadow-lg ${collapsed ? 'w-20' : 'w-64'
+          }`}
       >
         {sidebarContent}
       </aside>
@@ -232,9 +228,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Backdrop & Drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div 
+          <div
             onClick={onCloseMobile}
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" 
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
           />
           <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 shadow-2xl">
             {sidebarContent}

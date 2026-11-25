@@ -56,7 +56,7 @@ export const App: React.FC = () => {
         <footer className="bg-white border-t border-[#E3EBE5] py-5 text-xs text-[#718078]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
             <p>
-              &copy; {new Date().getFullYear()} AquaGuard AI &bull; Environmental Intelligence &amp; Water Resources Platform
+              &copy; {new Date().getFullYear()} AquaSetu AI &bull; Water Intelligence &amp; Environmental Monitoring Platform
             </p>
             <p className="text-[11px] text-[#718078]">
               CGWB Maharashtra &bull; BIS IS 10500:2012 Certified Modules: Groundwater Regression &bull; Water Potability &bull; Spatial &amp; Road Routing

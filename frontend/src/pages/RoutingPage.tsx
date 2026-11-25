@@ -34,7 +34,7 @@ export const RoutingPage: React.FC = () => {
     // Center on Pune District
     const map = L.map(mapContainerRef.current, { zoomControl: false }).setView([18.5204, 73.8567], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors | AquaGuard AI',
+      attribution: '&copy; OpenStreetMap contributors | AquaSetu AI',
       maxZoom: 18,
     }).addTo(map);
 
