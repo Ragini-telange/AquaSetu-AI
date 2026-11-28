@@ -27,6 +27,9 @@ class Settings(BaseSettings):
 
     # Sakshi Classification Paths
     CLASSIFICATION_MODEL_PATH: str = "audit/sakshi_classification/project_aiml/models/water_quality_model.pkl"
+    CLASSIFICATION_PREDICTIONS_PATH: str = "audit/sakshi_classification/project_aiml/reports/water_quality_station_predictions.csv"
+    CLASSIFICATION_RAW_DATA_PATH: str = "audit/sakshi_classification/project_aiml/data/raw/gwq_chemical_parameter_manual_cgwb_an_1961_2025.csv"
+    CLASSIFICATION_SIMULATED_DATA_PATH: str = "audit/sakshi_classification/project_aiml/data/maharashtra_simulated_water_quality.csv"
 
     # Vedangi Geographical Paths
     STATEWIDE_LOCATIONS_PATH: str = "audit/vedangi_geographical_search/AquaGuard_AI1/vedangi_search_module/processed_data/groundwater_locations.csv"

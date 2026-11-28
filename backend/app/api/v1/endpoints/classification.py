@@ -1,5 +1,9 @@
 from fastapi import APIRouter
-from app.schemas.classification import WaterPotabilityRequest, WaterPotabilityResponse
+from app.schemas.classification import (
+    WaterPotabilityRequest,
+    WaterPotabilityResponse,
+    DistrictClassificationCoverageResponse,
+)
 from app.services.classification_service import classification_service
 
 router = APIRouter()
@@ -17,3 +21,17 @@ router = APIRouter()
 )
 def classify_water_potability(request: WaterPotabilityRequest) -> WaterPotabilityResponse:
     return classification_service.classify_potability(request)
+
+
+@router.get(
+    "/classification/district-coverage",
+    response_model=DistrictClassificationCoverageResponse,
+    summary="Maharashtra 33-District Water Quality Classification Coverage",
+    description=(
+        "Returns district-level water quality potability coverage across all 33 Maharashtra districts "
+        "classified by the existing XGBoost pipeline using verified CGWB district coordinates, "
+        "actual Maharashtra chemical records where available, and clearly labelled simulated 11-parameter inputs."
+    )
+)
+def get_classification_district_coverage() -> DistrictClassificationCoverageResponse:
+    return classification_service.get_district_classification_coverage()

@@ -33,3 +33,43 @@ class WaterPotabilityResponse(BaseModel):
         "Advisory: Model outputs reflect statistical classification against BIS IS 10500:2012 physicochemical limits. "
         "They do not replace comprehensive certified microbiological and toxicological laboratory testing."
     )
+
+
+class DistrictClassificationSummary(BaseModel):
+    district: str
+    latitude: float
+    longitude: float
+    monitoring_locations_count: int = Field(..., ge=0)
+    tested_samples: int = Field(..., ge=0)
+    potable_samples: int = Field(..., ge=0)
+    non_potable_samples: int = Field(..., ge=0)
+    potability_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
+    dominant_classification: str
+    classification_source: str
+    status: str
+    has_verified_coordinates: bool = True
+    data_source_note: str
+
+
+class VerifiedClassificationStation(BaseModel):
+    id: str
+    name: str
+    district: str
+    latitude: float
+    longitude: float
+    potability_code: int
+    potability_label: str
+    probability_potable: Optional[float] = None
+    source: str
+
+
+class DistrictClassificationCoverageResponse(BaseModel):
+    total_districts: int
+    districts_with_data: int
+    districts_without_data: int
+    total_tested_samples: int
+    total_potable_samples: int
+    total_non_potable_samples: int
+    districts: List[DistrictClassificationSummary]
+    verified_stations: List[VerifiedClassificationStation]
+    dataset_scope_note: str

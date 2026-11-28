@@ -194,6 +194,46 @@ export interface HealthResponse {
   };
 }
 
+export interface DistrictClassificationSummary {
+  district: string;
+  latitude: number;
+  longitude: number;
+  monitoring_locations_count: number;
+  tested_samples: number;
+  potable_samples: number;
+  non_potable_samples: number;
+  potability_percentage: number | null;
+  dominant_classification: 'Potable' | 'Non-Potable';
+  classification_source: 'Actual' | 'Simulated';
+  status: string;
+  has_verified_coordinates: boolean;
+  data_source_note: string;
+}
+
+export interface VerifiedClassificationStation {
+  id: string;
+  name: string;
+  district: string;
+  latitude: number;
+  longitude: number;
+  potability_code: number;
+  potability_label: 'Potable' | 'Non-Potable';
+  probability_potable: number | null;
+  source: string;
+}
+
+export interface DistrictClassificationCoverageResponse {
+  total_districts: number;
+  districts_with_data: number;
+  districts_without_data: number;
+  total_tested_samples: number;
+  total_potable_samples: number;
+  total_non_potable_samples: number;
+  districts: DistrictClassificationSummary[];
+  verified_stations: VerifiedClassificationStation[];
+  dataset_scope_note: string;
+}
+
 // -------------------------------------------------------------
 // API Request Helper
 // -------------------------------------------------------------
@@ -293,4 +333,8 @@ export async function getSpatialLocations(district?: string, limit?: number): Pr
 
 export async function getSpatialDistricts(): Promise<string[]> {
   return getJSON<string[]>('/api/v1/spatial/districts');
+}
+
+export async function getClassificationDistrictCoverage(): Promise<DistrictClassificationCoverageResponse> {
+  return getJSON<DistrictClassificationCoverageResponse>('/api/v1/classification/district-coverage');
 }

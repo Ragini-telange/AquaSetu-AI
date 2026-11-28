@@ -28,7 +28,8 @@ import {
   getSpatialDistricts,
   findNearestWells,
   findPuneRoute,
-  classifyWaterPotability
+  classifyWaterPotability,
+  getClassificationDistrictCoverage
 } from '../services/api';
 import type {
   WellMetadataItem,
@@ -36,7 +37,9 @@ import type {
   NearestWellResponse,
   PuneRoutingResponse,
   WaterPotabilityResponse,
-  WaterPotabilityRequest
+  WaterPotabilityRequest,
+  DistrictClassificationCoverageResponse,
+  DistrictClassificationSummary
 } from '../services/api';
 
 export type MapLayerType = 'regression' | 'classification' | 'spatial' | 'routing';
@@ -132,6 +135,9 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
   ]);
   const [selectedSample, setSelectedSample] = useState<GeotaggedWaterSample | null>(null);
   const [evaluatingSample, setEvaluatingSample] = useState<boolean>(false);
+  const [districtCoverage, setDistrictCoverage] = useState<DistrictClassificationCoverageResponse | null>(null);
+  const [selectedDistrictCoverage, setSelectedDistrictCoverage] = useState<DistrictClassificationSummary | null>(null);
+  const [classificationSearch, setClassificationSearch] = useState<string>('');
 
   // Layer 3: Spatial State
   const [spatialDistricts, setSpatialDistricts] = useState<string[]>([]);
@@ -201,14 +207,16 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
       setLoading(true);
       setError(null);
       try {
-        const [regWellsRes, regDists, spatDists] = await Promise.all([
+        const [regWellsRes, regDists, spatDists, clsCoverage] = await Promise.all([
           getRegressionWells(undefined, 3737),
           getRegressionDistricts(),
-          getSpatialDistricts()
+          getSpatialDistricts(),
+          getClassificationDistrictCoverage()
         ]);
         setRegressionWells(regWellsRes.wells);
         setRegressionDistricts(regDists);
         setSpatialDistricts(spatDists);
+        setDistrictCoverage(clsCoverage);
       } catch (err: any) {
         setError(`Failed to load repository data: ${err.message}`);
       } finally {
@@ -258,6 +266,15 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
     return list;
   }, [regressionWells, selectedDistrict, searchQuery]);
 
+  const filteredClassificationDistricts = useMemo(() => {
+    const districts = districtCoverage?.districts || [];
+    if (!classificationSearch.trim()) return districts;
+    const q = classificationSearch.trim().toLowerCase();
+    return districts.filter(
+      (d) => d.district.toLowerCase().includes(q) || d.status.toLowerCase().includes(q)
+    );
+  }, [districtCoverage, classificationSearch]);
+
   // -------------------------------------------------------------
   // 4. Layer Switcher & Camera Repositioning
   // -------------------------------------------------------------
@@ -298,6 +315,8 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
     wellPredictionsMap,
     geotaggedSamples,
     selectedSample,
+    districtCoverage,
+    selectedDistrictCoverage,
     queryCoords,
     nearestResult,
     routingResponse
@@ -357,6 +376,111 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
   // Layer 2 Renderer: Water Quality (Classification)
   // -------------------------------------------------------------
   const renderClassificationLayer = (layerGroup: L.LayerGroup) => {
+    const districts = districtCoverage?.districts || [];
+
+    // 1. District-level coverage markers across all 33 Maharashtra districts (strictly GREEN or RED)
+    districts.forEach((d) => {
+      const isSelected = selectedDistrictCoverage?.district === d.district;
+      const isPotableDominant = d.dominant_classification === 'Potable';
+      const fillColor = isPotableDominant ? '#119B72' : '#E45B55';
+      const strokeColor = isSelected ? '#073B32' : isPotableDominant ? '#073B32' : '#991B1B';
+      const potPctText = d.potability_percentage !== null ? `${d.potability_percentage}%` : '0%';
+      const dotSize = isSelected ? 22 : 17;
+
+      const districtPopupHtml = `
+        <div style="font-family: sans-serif; font-size: 12px; min-width: 225px; color: #182C25; line-height: 1.45;">
+          <div style="font-weight: 700; color: #073B32; font-size: 13px; border-bottom: 1px solid #E3EBE5; padding-bottom: 4px; margin-bottom: 6px;">
+            ${d.district} District
+          </div>
+          <div style="margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-weight: 700; color: ${fillColor};">
+              ${d.dominant_classification} (Dominant)
+            </span>
+            <span style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 9999px; background: #F1F5F9; color: #334155;">
+              ${d.classification_source}
+            </span>
+          </div>
+          <div style="font-size: 11px; color: #182C25;">
+            <div><strong>Total Samples:</strong> ${d.tested_samples}</div>
+            <div style="color: #119B72;"><strong>Potable Count:</strong> ${d.potable_samples}</div>
+            <div style="color: #E45B55;"><strong>Non-Potable Count:</strong> ${d.non_potable_samples}</div>
+            <div><strong>Potability %:</strong> ${potPctText}</div>
+            <div><strong>Classification Source:</strong> ${d.classification_source}</div>
+          </div>
+          <div style="font-size: 10px; color: #718078; margin-top: 6px; border-top: 1px solid #E3EBE5; padding-top: 4px;">
+            ${d.data_source_note}<br/>
+            CGWB Monitoring Sites: ${d.monitoring_locations_count}
+          </div>
+        </div>
+      `;
+
+      const districtIcon = L.divIcon({
+        className: 'district-potability-marker',
+        html: `
+          <div style="display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%); cursor: pointer;">
+            <div style="
+              width: ${dotSize}px;
+              height: ${dotSize}px;
+              border-radius: 50%;
+              background-color: ${fillColor};
+              border: ${isSelected ? '3px' : '2px'} solid ${strokeColor};
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            "></div>
+            <span style="
+              margin-top: 2px;
+              font-size: 9px;
+              font-weight: 700;
+              line-height: 1;
+              color: #0F172A;
+              background: rgba(255, 255, 255, 0.85);
+              padding: 1px 3px;
+              border-radius: 3px;
+              white-space: nowrap;
+              border: 1px solid rgba(203, 213, 225, 0.8);
+            ">${d.district}</span>
+          </div>
+        `,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
+        popupAnchor: [0, -10],
+      });
+
+      const marker = L.marker([d.latitude, d.longitude], { icon: districtIcon });
+      marker.bindTooltip(
+        `${d.district}: ${d.dominant_classification} (${d.potable_samples} Potable, ${d.non_potable_samples} Non-Potable | ${potPctText}) [${d.classification_source}]`,
+        { direction: 'top', offset: [0, -10] }
+      );
+      marker.bindPopup(districtPopupHtml);
+      marker.on('click', () => {
+        setSelectedDistrictCoverage(d);
+        setSelectedSample(null);
+      });
+      layerGroup.addLayer(marker);
+    });
+
+    // 2. Verified dataset stations (if any exist for Maharashtra with valid coordinates)
+    (districtCoverage?.verified_stations || []).forEach((st) => {
+      const isPotable = st.potability_code === 1;
+      const pin = createCustomPin(isPotable ? 'emerald' : 'red');
+      const marker = L.marker([st.latitude, st.longitude], { icon: pin });
+      marker.bindPopup(`
+        <div style="font-family: sans-serif; font-size: 12px; min-width: 190px; color: #182C25;">
+          <div style="font-weight: bold; color: #073B32;">${st.name} (${st.district})</div>
+          <div style="margin-top: 4px; font-weight: 700; color: ${isPotable ? '#119B72' : '#E45B55'};">
+            ${st.potability_label}
+          </div>
+          <div style="color: #718078; font-size: 11px; margin-top: 2px;">
+            ML Score: ${st.probability_potable !== null ? (st.probability_potable * 100).toFixed(1) + '%' : 'N/A'}
+          </div>
+          <div style="font-size: 10px; color: #718078; margin-top: 4px; border-top: 1px solid #E3EBE5; padding-top: 4px;">
+            Source: ${st.source}
+          </div>
+        </div>
+      `);
+      layerGroup.addLayer(marker);
+    });
+
+    // 3. Verified baseline individual sample stations
     geotaggedSamples.forEach((sample) => {
       const isPotable = sample.classificationResult?.potability_code === 1;
       const pinColor = isPotable ? 'emerald' : 'red';
@@ -365,7 +489,7 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
       const marker = L.marker([sample.latitude, sample.longitude], { icon: pin });
 
       const popupHtml = `
-        <div style="font-family: sans-serif; font-size: 12px; min-width: 190px; color: #182C25;">
+        <div style="font-family: sans-serif; font-size: 12px; min-width: 200px; color: #182C25;">
           <div style="font-weight: bold; color: #073B32;">${sample.name}</div>
           <div style="margin-top: 4px; font-weight: 700; color: ${isPotable ? '#119B72' : '#E45B55'};">
             ${sample.classificationResult ? sample.classificationResult.potability_label : 'Evaluating...'}
@@ -373,7 +497,8 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
           <div style="color: #718078; font-size: 11px; margin-top: 2px;">
             ML Score: ${sample.classificationResult ? (sample.classificationResult.probability_potable * 100).toFixed(1) + '%' : 'N/A'}
           </div>
-          <div style="font-size: 10px; color: #718078; margin-top: 4px; border-top: 1px solid #E3EBE5; pt: 4px;">
+          <div style="font-size: 10px; color: #718078; margin-top: 4px; border-top: 1px solid #E3EBE5; padding-top: 4px;">
+            Single verified station sample (does not classify entire district)<br/>
             Date: ${sample.date}
           </div>
         </div>
@@ -382,6 +507,7 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
 
       marker.on('click', () => {
         setSelectedSample(sample);
+        setSelectedDistrictCoverage(null);
       });
 
       layerGroup.addLayer(marker);
@@ -585,7 +711,7 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
               <Activity className="w-3.5 h-3.5" />
               <span>2. Water Quality</span>
               <span className="text-[10px] ml-1 px-1.5 py-0.2 rounded-full bg-[#073B32] text-[#D9F2E6]">
-                {geotaggedSamples.length}
+                {districtCoverage ? `${districtCoverage.total_districts} Districts` : geotaggedSamples.length}
               </span>
             </button>
 
@@ -664,16 +790,19 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
           )}
 
           {activeLayer === 'classification' && (
-            <div className="bg-white/95 backdrop-blur-md p-3 rounded-xl border border-[#E3EBE5] shadow-md text-xs pointer-events-auto space-y-1">
-              <p className="font-bold text-[#182C25]">Water Potability Status (BIS IS 10500)</p>
+            <div className="bg-white/95 backdrop-blur-md p-3 rounded-xl border border-[#E3EBE5] shadow-md text-xs pointer-events-auto space-y-1.5">
+              <p className="font-bold text-[#182C25] flex items-center justify-between gap-2">
+                <span>Water Potability Status (BIS IS 10500)</span>
+                <span className="text-[10px] text-[#718078] font-normal">33 Districts</span>
+              </p>
               <div className="flex items-center gap-4 text-[11px]">
                 <div className="flex items-center gap-1.5 text-[#119B72]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#119B72]" />
-                  <span className="font-semibold">Potable (Compliant)</span>
+                  <span className="w-3 h-3 rounded-full bg-[#119B72] border border-[#073B32]" />
+                  <span className="font-semibold">Potable (Green)</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[#E45B55]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#E45B55]" />
-                  <span className="font-semibold">Non-Potable (Exceeded)</span>
+                  <span className="w-3 h-3 rounded-full bg-[#E45B55] border border-[#991B1B]" />
+                  <span className="font-semibold">Non-Potable (Red)</span>
                 </div>
               </div>
             </div>
@@ -922,24 +1051,171 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
                 <span>Water Potability Classification</span>
               </h3>
               <p className="text-xs text-[#718078] mt-0.5">
-                XGBoost Potability Classifier &bull; BIS IS 10500:2012 compliance.
+                XGBoost Potability Classifier &bull; BIS IS 10500:2012 compliance across 33 districts.
               </p>
             </div>
 
-            {/* Geocoding Notice Banner */}
+            {/* Statewide Coverage Summary */}
+            {districtCoverage && (
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-[#F8FAF7] p-2.5 rounded-xl border border-[#E3EBE5]">
+                  <span className="text-[10px] font-bold text-[#718078] uppercase">Districts</span>
+                  <p className="font-bold text-[#182C25] text-sm">
+                    {districtCoverage.districts_with_data} / {districtCoverage.total_districts} Covered
+                  </p>
+                </div>
+                <div className="bg-[#F8FAF7] p-2.5 rounded-xl border border-[#E3EBE5]">
+                  <span className="text-[10px] font-bold text-[#718078] uppercase">Dataset Samples</span>
+                  <p className="font-bold text-[#182C25] text-sm">
+                    {districtCoverage.total_tested_samples} ({districtCoverage.total_potable_samples}P / {districtCoverage.total_non_potable_samples}NP)
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Geocoding & Data Integrity Notice Banner */}
             <div className="bg-[#EDF8F1] border border-[#D9F2E6] rounded-xl p-3 text-xs text-[#073B32] space-y-1">
               <p className="font-bold flex items-center gap-1.5 text-[#073B32]">
                 <Info className="w-4 h-4 text-[#119B72] shrink-0" />
-                <span>Geocoding Data Integrity</span>
+                <span>District Coverage &amp; Model Source</span>
               </p>
               <p className="text-[11px] leading-relaxed text-[#073B32]/85">
-                Raw CGWB chemical water quality batches record laboratory values without individual GPS station coordinates. Markers appear strictly for verified geotagged sampling stations.
+                {districtCoverage?.dataset_scope_note ||
+                  'All 33 Maharashtra districts classified via the existing XGBoost pipeline.'}
               </p>
             </div>
 
-            {/* Sample Selector */}
+            {/* Selected District Details Card */}
+            {selectedDistrictCoverage && (
+              <div className="bg-white rounded-xl border border-[#119B72]/50 p-4 space-y-2.5 shadow-sm">
+                <div className="flex items-start justify-between gap-2 border-b border-[#E3EBE5] pb-2">
+                  <div>
+                    <h4 className="font-bold text-[#182C25] text-sm">{selectedDistrictCoverage.district} District</h4>
+                    <p className="text-[11px] text-[#718078]">
+                      Source: <strong className="text-[#073B32]">{selectedDistrictCoverage.classification_source}</strong> &bull; {selectedDistrictCoverage.monitoring_locations_count} CGWB sites
+                    </p>
+                  </div>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                      selectedDistrictCoverage.dominant_classification === 'Potable'
+                        ? 'bg-[#EDF8F1] text-[#119B72] border border-[#D9F2E6]'
+                        : 'bg-[#FDF2F2] text-[#E45B55] border border-[#FAD2D2]'
+                    }`}
+                  >
+                    {selectedDistrictCoverage.dominant_classification}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-[#F8FAF7] p-2 rounded-lg border border-[#E3EBE5]">
+                    <span className="text-[10px] text-[#718078]">Total Samples</span>
+                    <p className="font-bold text-[#182C25]">{selectedDistrictCoverage.tested_samples}</p>
+                  </div>
+                  <div className="bg-[#F8FAF7] p-2 rounded-lg border border-[#E3EBE5]">
+                    <span className="text-[10px] text-[#718078]">Potability %</span>
+                    <p className="font-bold text-[#182C25]">
+                      {selectedDistrictCoverage.potability_percentage !== null
+                        ? `${selectedDistrictCoverage.potability_percentage}%`
+                        : '0%'}
+                    </p>
+                  </div>
+                  <div className="bg-[#EDF8F1] p-2 rounded-lg border border-[#D9F2E6]">
+                    <span className="text-[10px] text-[#073B32]">Potable Count</span>
+                    <p className="font-bold text-[#119B72]">{selectedDistrictCoverage.potable_samples}</p>
+                  </div>
+                  <div className="bg-[#FDF2F2] p-2 rounded-lg border border-[#FAD2D2]">
+                    <span className="text-[10px] text-[#991B1B]">Non-Potable Count</span>
+                    <p className="font-bold text-[#E45B55]">{selectedDistrictCoverage.non_potable_samples}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] bg-[#F8FAF7] px-2.5 py-1.5 rounded-lg border border-[#E3EBE5]">
+                  <span className="text-[#718078]">Classification Source:</span>
+                  <strong className="text-[#073B32]">{selectedDistrictCoverage.classification_source}</strong>
+                </div>
+
+                <p className="text-[11px] text-[#718078] leading-relaxed">
+                  {selectedDistrictCoverage.data_source_note}
+                </p>
+              </div>
+            )}
+
+            {/* All 33 Maharashtra Districts List */}
+            {districtCoverage && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-[#718078] uppercase">
+                    Maharashtra Districts ({filteredClassificationDistricts.length})
+                  </label>
+                  {selectedDistrictCoverage && (
+                    <button
+                      onClick={() => setSelectedDistrictCoverage(null)}
+                      className="text-[11px] font-semibold text-[#119B72] hover:text-[#0E8360]"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-[#718078] absolute left-2.5 top-2.5" />
+                  <input
+                    type="text"
+                    value={classificationSearch}
+                    onChange={(e) => setClassificationSearch(e.target.value)}
+                    placeholder="Filter 33 Maharashtra districts..."
+                    className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#E3EBE5] bg-white text-xs text-[#182C25] focus:border-[#119B72] outline-none"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                  {filteredClassificationDistricts.map((d) => {
+                    const isSelected = selectedDistrictCoverage?.district === d.district;
+                    const isPotableDominant = d.dominant_classification === 'Potable';
+                    return (
+                      <div
+                        key={d.district}
+                        onClick={() => {
+                          setSelectedDistrictCoverage(d);
+                          setSelectedSample(null);
+                          if (mapInstanceRef.current) {
+                            mapInstanceRef.current.flyTo([d.latitude, d.longitude], 9, { duration: 0.8 });
+                          }
+                        }}
+                        className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between gap-2 ${
+                          isSelected
+                            ? 'bg-[#EDF8F1] border-[#119B72] shadow-xs'
+                            : 'bg-white border-[#E3EBE5] hover:border-[#CDDAD1]'
+                        }`}
+                      >
+                        <div>
+                          <p className="text-xs font-bold text-[#182C25]">
+                            {d.district}{' '}
+                            <span className="text-[10px] font-normal text-[#718078]">({d.classification_source})</span>
+                          </p>
+                          <p className="text-[10px] text-[#718078]">
+                            Total: {d.tested_samples} &bull; Potable: {d.potable_samples} &bull; Non-Potable: {d.non_potable_samples}
+                          </p>
+                        </div>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                            isPotableDominant
+                              ? 'bg-[#EDF8F1] text-[#119B72] border border-[#D9F2E6]'
+                              : 'bg-[#FDF2F2] text-[#E45B55] border border-[#FAD2D2]'
+                          }`}
+                        >
+                          {d.dominant_classification}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Verified Baseline Individual Station Samples */}
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#718078] uppercase">Verified Geographic Stations</label>
+              <label className="text-[10px] font-bold text-[#718078] uppercase">
+                Verified Baseline Station Samples ({geotaggedSamples.length})
+              </label>
               <div className="space-y-2">
                 {geotaggedSamples.map((sample) => {
                   const isSelected = selectedSample?.id === sample.id;
@@ -947,7 +1223,10 @@ export const MaharashtraMap: React.FC<MaharashtraMapProps> = ({
                   return (
                     <div
                       key={sample.id}
-                      onClick={() => setSelectedSample(sample)}
+                      onClick={() => {
+                        setSelectedSample(sample);
+                        setSelectedDistrictCoverage(null);
+                      }}
                       className={`p-3 rounded-xl border cursor-pointer transition-all ${
                         isSelected
                           ? 'bg-[#EDF8F1] border-[#119B72] shadow-sm'

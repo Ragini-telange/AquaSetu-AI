@@ -182,6 +182,153 @@ def test_classification_tds_fallback(client):
     data = res.json()
     assert data["input_tds_calculated"] is True
 
+
+def test_classification_district_coverage_actual(client):
+    res = client.get("/api/v1/classification/district-coverage")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["total_districts"] == 33
+    assert len(data["districts"]) == 33
+    assert data["districts_with_data"] == 33
+    assert data["districts_without_data"] == 0
+    assert data["total_tested_samples"] == 165
+    assert data["total_potable_samples"] == 97
+    assert data["total_non_potable_samples"] == 68
+    potable_dists = sum(1 for d in data["districts"] if d["dominant_classification"] == "Potable")
+    non_potable_dists = sum(1 for d in data["districts"] if d["dominant_classification"] == "Non-Potable")
+    assert potable_dists == 20
+    assert non_potable_dists == 13
+    assert potable_dists + non_potable_dists == 33
+    assert "Andaman" in data["dataset_scope_note"]
+    assert "Simulated" in data["dataset_scope_note"]
+    for d in data["districts"]:
+        assert 15.5 <= d["latitude"] <= 22.3
+        assert 72.5 <= d["longitude"] <= 81.0
+        assert d["monitoring_locations_count"] > 0
+        assert d["tested_samples"] == 5
+        assert d["dominant_classification"] in ("Potable", "Non-Potable")
+        assert d["status"] == d["dominant_classification"]
+        assert d["classification_source"] == "Simulated"
+        assert d["potability_percentage"] is not None
+
+
+def test_classification_district_coverage_aggregation_scenarios():
+    import pandas as pd
+    from app.services.classification_service import classification_service
+    from app.core.config import settings
+
+    df_locs = pd.read_csv(settings.get_absolute_path(settings.STATEWIDE_LOCATIONS_PATH))
+    df_mock = pd.DataFrame([
+        # Potable district (Pune: 3 potable, Actual)
+        {"District": "Pune", "Station": "P1", "Latitude": 18.52, "Longitude": 73.85, "Predicted_Potable": 1, "Potability_Probability": 0.95, "Source": "Actual"},
+        {"District": "Pune", "Station": "P2", "Latitude": 18.55, "Longitude": 73.82, "Predicted_Potable": 1, "Potability_Probability": 0.91, "Source": "Actual"},
+        {"District": "Pune", "Station": "P3", "Latitude": 18.49, "Longitude": 73.88, "Predicted_Potable": 1, "Potability_Probability": 0.89, "Source": "Actual"},
+        # Non-Potable district (Solapur: 2 non-potable, Actual)
+        {"District": "Solapur", "Station": "S1", "Latitude": 17.66, "Longitude": 75.91, "Predicted_Potable": 0, "Potability_Probability": 0.12, "Source": "Actual"},
+        {"District": "Solapur", "Station": "S2", "Latitude": 17.68, "Longitude": 75.92, "Predicted_Potable": 0, "Potability_Probability": 0.08, "Source": "Actual"},
+        # Mixed district (Nagpur: 2 potable, 1 non-potable, 1 missing GPS coords -> dominant Potable)
+        {"District": "Nagpur", "Station": "N1", "Latitude": 21.14, "Longitude": 79.08, "Predicted_Potable": 1, "Potability_Probability": 0.93, "Source": "Simulated"},
+        {"District": "Nagpur", "Station": "N2", "Latitude": None, "Longitude": None, "Predicted_Potable": 1, "Potability_Probability": 0.87, "Source": "Simulated"},
+        {"District": "Nagpur", "Station": "N3", "Latitude": 21.16, "Longitude": 79.10, "Predicted_Potable": 0, "Potability_Probability": 0.15, "Source": "Simulated"},
+    ])
+
+    coverage = classification_service.build_district_coverage(df_locs, df_mock)
+    assert coverage.total_districts == 33
+    assert coverage.districts_with_data == 3
+    assert coverage.total_tested_samples == 8
+    assert coverage.total_potable_samples == 5
+    assert coverage.total_non_potable_samples == 3
+    # Missing GPS row (N2) must not appear as a verified station
+    assert len(coverage.verified_stations) == 7
+
+    by_dist = {d.district: d for d in coverage.districts}
+    assert by_dist["Pune"].dominant_classification == "Potable"
+    assert by_dist["Pune"].classification_source == "Actual"
+    assert by_dist["Pune"].potability_percentage == 100.0
+    assert by_dist["Solapur"].dominant_classification == "Non-Potable"
+    assert by_dist["Solapur"].classification_source == "Actual"
+    assert by_dist["Solapur"].potability_percentage == 0.0
+    assert by_dist["Nagpur"].dominant_classification == "Potable"
+    assert by_dist["Nagpur"].classification_source == "Simulated"
+    assert by_dist["Nagpur"].potability_percentage == 66.7
+
+
+def test_classification_raw_chemical_pipeline_and_state_filtering():
+    import pandas as pd
+    from app.services.classification_service import classification_service
+    from app.core.config import settings
+
+    df_locs = pd.read_csv(settings.get_absolute_path(settings.STATEWIDE_LOCATIONS_PATH))
+    df_raw_mh = pd.DataFrame([
+        {
+            "State": "Maharashtra",
+            "District": "Pune",
+            "Station": "Test Station P1",
+            "Latitude": 18.5529,
+            "Longitude": 73.8262,
+            "Potential of Hydrogen (pH)": 7.2,
+            "Electric Conductivity (μS/cm)": 600.0,
+            "Total Dissolved Solids (mg/L)": None,  # Exercise 0.64 * EC fallback
+            "Total Hardness (mgCaCO3/L)": 180.0,
+            "Calcium (mg/L)": 50.0,
+            "Magnesium (mg/L)": 25.0,
+            "Chloride (mg/L)": 140.0,
+            "Sulphate (mg/L)": 90.0,
+            "Iron(mg/L)": 0.1,
+            "Bicarbonate (mg/L)": 200.0,
+            "Sodium (mg/L)": 45.0,
+        },
+        {
+            "State": "Maharashtra",
+            "District": "Pune",
+            "Station": "Test Station P2",
+            "Latitude": 18.5204,
+            "Longitude": 73.8567,
+            "Potential of Hydrogen (pH)": 9.2,
+            "Electric Conductivity (μS/cm)": 2200.0,
+            "Total Dissolved Solids (mg/L)": 1408.0,
+            "Total Hardness (mgCaCO3/L)": 350.0,
+            "Calcium (mg/L)": 90.0,
+            "Magnesium (mg/L)": 45.0,
+            "Chloride (mg/L)": 320.0,
+            "Sulphate (mg/L)": 280.0,
+            "Iron(mg/L)": 1.8,
+            "Bicarbonate (mg/L)": 350.0,
+            "Sodium (mg/L)": 120.0,
+        },
+        {
+            # Non-Maharashtra row must be excluded by State filter
+            "State": "Andaman And Nicobar Islands",
+            "District": "South Andaman",
+            "Station": "Annikat",
+            "Latitude": 11.7086,
+            "Longitude": 92.65,
+            "Potential of Hydrogen (pH)": 7.4,
+            "Electric Conductivity (μS/cm)": 500.0,
+            "Total Dissolved Solids (mg/L)": 320.0,
+            "Total Hardness (mgCaCO3/L)": 150.0,
+            "Calcium (mg/L)": 40.0,
+            "Magnesium (mg/L)": 20.0,
+            "Chloride (mg/L)": 100.0,
+            "Sulphate (mg/L)": 75.0,
+            "Iron(mg/L)": 0.05,
+            "Bicarbonate (mg/L)": 180.0,
+            "Sodium (mg/L)": 30.0,
+        },
+    ])
+
+    classified = classification_service.classify_chemical_dataframe(df_raw_mh)
+    assert list(classified["Predicted_Potable"]) == [1, 0, 1]
+
+    coverage = classification_service.build_district_coverage(df_locs, classified)
+    assert coverage.districts_with_data == 1
+    assert coverage.total_tested_samples == 2
+    assert coverage.total_potable_samples == 1
+    assert coverage.total_non_potable_samples == 1
+    pune = next(d for d in coverage.districts if d.district == "Pune")
+    assert pune.dominant_classification == "Potable"
+    assert pune.potability_percentage == 50.0
+
 # -------------------------------------------------------------
 # 4. SPATIAL STATEWIDE NEAREST-WELL SEARCH TESTS (VEDANGI)
 # -------------------------------------------------------------
